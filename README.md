@@ -1,2 +1,2 @@
 # Project-RL
-Hello Pilip and Mojgan :D
+Hello Philip and Mojgan :D
