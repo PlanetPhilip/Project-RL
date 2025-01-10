@@ -1,4 +1,5 @@
 from env import DataCenterEnv
+from agent import QAgent
 import numpy as np
 import argparse
 
@@ -9,16 +10,16 @@ args = args.parse_args()
 np.set_printoptions(suppress=True, precision=2)
 path_to_dataset = args.path
 
+# Initialize
 environment = DataCenterEnv(path_to_dataset)
-
-aggregate_reward = 0
-terminated = False
+agent = QAgent(environment)
 state = environment.observation()
+aggregate_reward = 0
 
+# Rollout
+terminated = False
 while not terminated:
-    # agent is your own imported agent class
-    # action = agent.act(state)
-    action = np.random.uniform(-1, 1)
+    action = agent.act(state)
     # next_state is given as: [storage_level, price, hour, day]
     next_state, reward, terminated = environment.step(action)
     state = next_state
