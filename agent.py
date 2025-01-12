@@ -26,7 +26,7 @@ class QAgent:
 
 
     def discretize_state(self, state):
-        discretized_state = [np.digitize(state[i], self.bins[i]) for i in range(len(state))]
+        discretized_state = [np.digitize(state[i], self.bins[i]) - 1 for i in range(len(state))]
         return discretized_state
 
     def act(self, state):

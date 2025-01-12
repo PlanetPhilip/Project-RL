@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 
 args = argparse.ArgumentParser()
-args.add_argument('--path', type=str, default='train.xlsx')
+args.add_argument('--path', type=str, default='Data/train.xlsx')
 args = args.parse_args()
 
 np.set_printoptions(suppress=True, precision=2)
