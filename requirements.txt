@@ -1,0 +1,20 @@
+###### Requirements (without Version Specifiers) ######
+torch
+torchvision
+torchaudio
+gym
+gym[atari]
+autorom[accept-rom-license]
+jax
+jaxlib
+matplotlib
+jupyter
+pygame
+seaborn
+scikit-image
+imageio
+sk-video
+pandas
+imageio[ffmpeg]
+imageio[pyav]
+openpyxl
