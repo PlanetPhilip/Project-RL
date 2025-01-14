@@ -13,19 +13,9 @@ path_to_dataset = args.path
 # Initialize
 environment = DataCenterEnv(path_to_dataset)
 agent = QAgent(environment)
-state = environment.observation()
-aggregate_reward = 0
 
-# Rollout
-terminated = False
-while not terminated:
-    action = agent.act(state)
-    # next_state is given as: [storage_level, price, hour, day]
-    next_state, reward, terminated = environment.step(action)
-    state = next_state
-    aggregate_reward += reward
-    print("Action:", action)
-    print("Next state:", next_state)
-    print("Reward:", reward)
+# Train Agent
+# agent.train()
 
-print('Total reward:', aggregate_reward)
+# Evaluate Agent
+agent.evaluate()
