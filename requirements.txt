@@ -2,7 +2,7 @@
 torch
 torchvision
 torchaudio
-gym
+gym~=0.26.2
 gym[atari]
 autorom[accept-rom-license]
 jax
@@ -14,7 +14,9 @@ seaborn
 scikit-image
 imageio
 sk-video
-pandas
+pandas~=2.2.3
 imageio[ffmpeg]
 imageio[pyav]
 openpyxl
+
+numpy~=1.24.4
