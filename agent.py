@@ -5,7 +5,7 @@ import subprocess
 
 class QAgent:
 
-    def __init__(self, env, discount_rate=0.95, bin_size=10):
+    def __init__(self, env, discount_rate=0.95):
         self.env = env
         self.discount_rate = discount_rate
 
@@ -13,19 +13,22 @@ class QAgent:
         self.action_space = gym.spaces.Discrete(3)
 
         # Discretize State Space
-        self.bin_storage_level = np.linspace(env.storage_level, 170, bin_size)
-        self.bin_price = np.linspace(np.min(env.price_values), np.max(env.price_values), bin_size)
-        self.bin_hour = np.linspace(env.hour, 24, bin_size)
-        self.bin_day = np.linspace(env.day, len(env.price_values), bin_size)
-        self.bins = [self.bin_storage_level, self.bin_price, self.bin_hour, self.bin_day]
+        states = {
+            'storage_level': {'low': 0, 'high': 290, 'bin_size': 10},
+            'price': {'low': np.min(env.price_values), 'high': np.max(env.price_values), 'bin_size': 10},
+            'hour': {'low': 1, 'high': 25, 'bin_size': 24},
+            'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': 10}
+        }
+        self.bins = [np.linspace(f['low'], f['high'], f['bin_size'] + 1) for f in states.values()]
 
         # Construct Q-table
         action_space_size = (self.action_space.n,)
-        state_space_size = (bin_size,) * len(self.bins)  # do we need to do -1 ?
+        state_space_size = tuple(f['bin_size'] for f in states.values())
         self.Qtable = np.zeros(state_space_size + action_space_size)
 
     def discretize_state(self, state):
-        discretized_state = [np.digitize(state[i], self.bins[i]) - 1 for i in range(len(state))]
+        # print(np.digitize(state[0], self.bins[0], right=True), state[0], self.bins[0])
+        discretized_state = [np.digitize(state[i], self.bins[i], right=True) - 1 for i in range(len(state))]
         return discretized_state
 
     def act(self, state, epsilon=0):
@@ -69,7 +72,6 @@ class QAgent:
                 next_state, reward, terminated = environment.step(action)
                 self.update_qtable(state, action, next_state, reward)
                 state = next_state
-                # state = self.update(state, action)
 
             # Update epsilon
             epsilon = epsilon * decay_rate
@@ -81,7 +83,7 @@ class QAgent:
 
         # Load Q-table
         self.Qtable = np.load('Data/q_table.npy')
-        print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
+        # print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
 
         # Initialize
         state = self.env.reset()
