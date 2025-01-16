@@ -8,6 +8,7 @@ class QAgent:
     def __init__(self, env, discount_rate=0.95):
         self.env = env
         self.discount_rate = discount_rate
+        self.q_table_path = 'Data/q_table.npy'
 
         # Discretize Action Space
         self.action_space = gym.spaces.Discrete(3)
@@ -77,13 +78,13 @@ class QAgent:
             epsilon = epsilon * decay_rate
 
         # Save Q-table
-        np.save('Data/q_table.npy', self.Qtable)
+        np.save(self.q_table_path, self.Qtable)
 
     def evaluate(self, print_transitions=False):
 
         # Load Q-table
-        self.Qtable = np.load('Data/q_table.npy')
-        # print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
+        self.Qtable = np.load(self.q_table_path)
+        print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
 
         # Initialize
         state = self.env.reset()
@@ -104,6 +105,21 @@ class QAgent:
                 print("Reward:", reward)
 
         print('Total reward:', aggregate_reward)
+
+
+class Heuristic(QAgent):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def act(self, state, epsilon=0):
+
+        # Heuristic: Picks Action based on time of day
+        if state[2] in [1, 2, 3, 4, 5, 6, 7, 8, 17, 22, 23, 24]:
+            action = 2
+        else:
+            action = 1
+
+        return action
 
 
 if __name__ == '__main__':
