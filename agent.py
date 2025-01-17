@@ -42,13 +42,20 @@ class QAgent:
 
         return action
 
+    def potential_function(self, state):
+        return 0
+
     def update_qtable(self, state, action, next_state, reward, learning_rate=0.05):
 
         # Update State
         next_state = self.discretize_state(next_state)
 
-        # Update Qtable
-        Q_target = (reward + self.discount_rate * np.max(self.Qtable[tuple(next_state)]))
+        # Shape Reward   R(s,a) = R(s,a) - P(s) + y*P(s')
+        shaped_reward = (reward - self.potential_function(state)
+                         + self.discount_rate * self.potential_function(next_state))
+
+        # Update Qtable  Q(s,a) = Q(s,a) + α*(R(s,a) + γ*max(Q(s',a) - Q(s,a))
+        Q_target = shaped_reward + self.discount_rate * np.max(self.Qtable[tuple(next_state)])
         delta = learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
         self.Qtable[tuple(state) + (action,)] = self.Qtable[tuple(state) + (action,)] + delta
 
