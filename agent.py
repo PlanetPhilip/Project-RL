@@ -6,6 +6,7 @@ import subprocess
 class QAgent:
 
     def __init__(self, env, discount_rate=0.95):
+        self.name = 'QAgent'
         self.env = env
         self.discount_rate = discount_rate
         self.q_table_path = 'Data/q_table.npy'
@@ -59,7 +60,7 @@ class QAgent:
         decay_rate = (end_epsilon / start_epsilon) ** (1 / (n_simulations - 1))
 
         for i in range(n_simulations):
-            print(f'Simulation: {i}')
+            print(f"Simulation: {i + 1}/{n_simulations}")
 
             # Initialize
             environment = self.env
@@ -79,11 +80,13 @@ class QAgent:
 
         # Save Q-table
         np.save(self.q_table_path, self.Qtable)
+        print(f'\nQtable saved to {self.q_table_path}')
 
     def evaluate(self, print_transitions=False):
+        print(self.name)
 
         # Load Q-table
-        self.Qtable = np.load(self.q_table_path)
+        if self.name != 'Heuristic': self.Qtable = np.load(self.q_table_path)
         print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
 
         # Initialize
@@ -104,12 +107,16 @@ class QAgent:
                 print("Next state:", next_state)
                 print("Reward:", reward)
 
-        print('Total reward:', aggregate_reward)
+        print(f'Total reward: {round(aggregate_reward)}\n')
 
 
 class Heuristic(QAgent):
     def __init__(self, *args):
         super().__init__(*args)
+        self.name = 'Heuristic'
+
+    def train(self, a=0, b=0, c=0):
+        print("You don't need to train a heuristic!")
 
     def act(self, state, epsilon=0):
 
@@ -123,4 +130,6 @@ class Heuristic(QAgent):
 
 
 if __name__ == '__main__':
-    subprocess.run(['python', 'main.py'])
+    subprocess.run(['python', 'main.py',
+                    '--mode', 'validate',
+                    '--agent', 'QAgent'])
