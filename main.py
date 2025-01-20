@@ -1,31 +1,25 @@
 from env import DataCenterEnv
-from agent import QAgent
+from agent import QAgent, Heuristic
 import numpy as np
 import argparse
 
+TRAIN = 'Data/transformed_dataset.xlsx'
+VALIDATE = 'Data/validate.xlsx'
+
 args = argparse.ArgumentParser()
-args.add_argument('--path', type=str, default='train.xlsx')
+args.add_argument('--path', type=str, default=TRAIN)
 args = args.parse_args()
 
 np.set_printoptions(suppress=True, precision=2)
 path_to_dataset = args.path
 
-# Initialize
-environment = DataCenterEnv(path_to_dataset)
+# Train
+environment = DataCenterEnv(TRAIN)
 agent = QAgent(environment)
-state = environment.observation()
-aggregate_reward = 0
+agent.train()
 
-# Rollout
-terminated = False
-while not terminated:
-    action = agent.act(state)
-    # next_state is given as: [storage_level, price, hour, day]
-    next_state, reward, terminated = environment.step(action)
-    state = next_state
-    aggregate_reward += reward
-    print("Action:", action)
-    print("Next state:", next_state)
-    print("Reward:", reward)
-
-print('Total reward:', aggregate_reward)
+# Evaluate
+#environment = DataCenterEnv(VALIDATE)
+#agent = QAgent(environment)
+#agent = Heuristic(environment)
+#agent.evaluate()
