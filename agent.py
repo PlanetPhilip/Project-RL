@@ -85,6 +85,14 @@ class QAgent:
             # Update epsilon
             epsilon = epsilon * decay_rate
 
+            # Save states in a txt file to observe what information is stored in the state
+            if 'Data/states.txt' not in os.listdir("Data"):
+                mode = 'w'
+            else:
+                mode = 'a'
+            with open('Data/states.txt', mode) as f:
+                f.write(str(state) + '\n')
+
         # Save Q-table
         np.save(self.q_table_path, self.Qtable)
         print(f'\nQtable saved to {self.q_table_path}')
@@ -137,6 +145,10 @@ class Heuristic(QAgent):
 
 
 if __name__ == '__main__':
-    subprocess.run(['python', 'main.py',
-                    '--mode', 'validate',
-                    '--agent', 'QAgent'])
+    subprocess.run(['python', 'main.py','--mode', 'validate', '--agent', 'QAgent'])
+
+
+
+
+
+

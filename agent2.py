@@ -12,6 +12,7 @@ from mpl_toolkits import mplot3d
 from matplotlib import cm
 import pandas as pd
 import seaborn as sns
+import os
 
 # Set the seed for reproducibility
 seed = 7
@@ -23,30 +24,30 @@ random.seed(seed)
 
 
 class DQN(nn.Module):
-    def __init__(self, env, learning_rate=5e-4):
+    def __init__(self, env, learning_rate=5e-4, hidden_layers=[128, 64, 32], activation_functions=[nn.Tanh(), nn.Tanh(), nn.Tanh()]):
         super(DQN, self).__init__()
 
         # Features / Action Space
         input_features = len(env.observation())
         action_space = gym.spaces.Discrete(3).n
 
-        # DNN
-        self.dense1 = nn.Linear(in_features=input_features, out_features=128)
-        self.dense2 = nn.Linear(in_features=128, out_features=64)
-        self.dense3 = nn.Linear(in_features=64, out_features=32)
-        self.dense4 = nn.Linear(in_features=32, out_features=action_space)
+        # DNN with customizable hidden layers
+        layers = []
+        in_features = input_features
+        for out_features, activation_function in zip(hidden_layers, activation_functions):
+            layers.append(nn.Linear(in_features, out_features))
+            layers.append(activation_function)
+            in_features = out_features
 
-        # Optimizer (use any optimizer e.g. RMSprob)
+        layers.append(nn.Linear(in_features, action_space))
+        self.model = nn.Sequential(*layers)
+
+        # Optimizer
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
     def forward(self, x):
-        # Forward Pass (use any activation function)
-        x = torch.tanh(self.dense1(x))
-        x = torch.tanh(self.dense2(x))
-        x = torch.tanh(self.dense3(x))
-        x = self.dense4(x)
-        return x
-
+        return self.model(x)
+    
 
 class ExperienceReplay:
     def __init__(self, env, buffer_size=50000, batch_size=32, min_replay_size=1000):
@@ -60,13 +61,13 @@ class ExperienceReplay:
         self.min_replay_size = min_replay_size
 
         # Initialize Replay Buffer with random transitions
-        o = env.reset()                            # Reset env, get obs
+        o = env.reset()                                             # Reset env, get obs
         for _ in range(self.min_replay_size):
             a = self.action_space.sample()                          # Choose action (random)
-            new_o, r, t1 = env.step(a)                       # Get Next state
-            self.replay_buffer.append((o, a, r, t1, new_o))   # Add transition to buffer
+            new_o, r, t1 = env.step(a)                              # Get Next state
+            self.replay_buffer.append((o, a, r, t1, new_o))         # Add transition to buffer
             o = new_o                                               # Update state
-            if t1: o = env.reset()                # Finished -> reset env
+            if t1: o = env.reset()                                  # Finished -> reset env
 
     def add_data(self, data):
         self.replay_buffer.append(data)
@@ -91,18 +92,18 @@ class ExperienceReplay:
 
 
 class DQAgent:
-    def __init__(self, env):
+    def __init__(self, env, learning_rate=5e-4, hidden_layers=[128, 64, 32], buffer_size=50000, batch_size=32, min_replay_size=1000):
         self.env = env
         self.action_space = gym.spaces.Discrete(3)
 
         # Initialize replay buffer
-        self.replay_memory = ExperienceReplay(env)
+        self.replay_memory = ExperienceReplay(env, buffer_size, batch_size, min_replay_size)
 
         # Construct DNN
-        self.online_network = DQN(env)
+        self.online_network = DQN(env, learning_rate, hidden_layers)
 
         # Target Network
-        self.target_network = DQN(env)
+        self.target_network = DQN(env, learning_rate, hidden_layers)
         self.target_network.load_state_dict(self.online_network.state_dict())
 
     def act(self, step, o, start_epsilon=1, end_epsilon=0.05, epsilon_decay=10000):
@@ -134,14 +135,14 @@ class DQAgent:
 
             # Rollout
             a, e = self.act(i, o)                                      # Choose action
-            new_o, r, t1 = self.env.step(a)                  # Get Next state
-            self.replay_memory.add_data((o, a, r, t1, new_o))    # Add transition to buffer
-            o = new_o                                               # Update state
-            total_reward += r                                       # Update total reward
+            new_o, r, t1 = self.env.step(a)                            # Get Next state
+            self.replay_memory.add_data((o, a, r, t1, new_o))          # Add transition to buffer
+            o = new_o                                                  # Update state
+            total_reward += r                                          # Update total reward
 
             # Finished
             if t1:
-                o = self.env.reset()                    # Reset env, get obs
+                o = self.env.reset()                                # Reset env, get obs
                 self.replay_memory.add_reward(total_reward)         # Add total reward to buffer
                 total_reward = 0                                    # Reset total reward
 
@@ -187,16 +188,27 @@ class DQAgent:
         loss.backward()
         self.online_network.optimizer.step()
 
+def train_dqn(param_set_nr, env_path, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size, n_simulations):
+    env = DataCenterEnv(env_path)
+    agent = DQAgent(env, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size)
+    avg_rewards = agent.train(n_simulations)
+
+    # Plot the behaviour of average reward
+    plt.plot(1000*(np.arange(len(avg_rewards))+1), avg_rewards)
+    plt.axhline(y=-110, color='r', linestyle='-')
+    plt.title(f'Average reward over the past 100 simulations\n Simulation: {param_set_nr}')
+    plt.xlabel('Number of simulations')
+    plt.legend(['Double DQN', 'Vanilla DQN', 'Benchmark solving the game'])
+    plt.ylabel('Average reward')
+    plt.show()
+
+    return avg_rewards
 
 from env import DataCenterEnv
 environment = DataCenterEnv('Data/train.xlsx')
 agent = DQAgent(environment)
 avg_rewards = agent.train()
 
-plt.plot(1000*(np.arange(len(avg_rewards))+1), avg_rewards)
-plt.axhline(y=-110, color='r', linestyle='-')
-plt.title('Average reward over the past 100 simulations')
-plt.xlabel('Number of simulations')
-plt.legend(['Double DQN', 'Vanilla DQN', 'Benchmark solving the game'])
-plt.ylabel('Average reward')
-plt.show()
+
+
+
