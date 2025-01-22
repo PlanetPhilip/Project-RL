@@ -1,136 +1,163 @@
 import gym
 import numpy as np
-from env import DataCenterEnv
+import subprocess
+import os
 import pandas as pd
 
 
 class QAgent:
 
     def __init__(self, env, discount_rate=0.95):
+        self.name = "QAgent"
         self.env = env
         self.discount_rate = discount_rate
         self.q_table_path = 'Data/q_table.npy'
+
+        # Calculate initial average price
+        hour_columns = [col for col in env.test_data.columns if 'Hour' in col]
+        avg_price = env.test_data[hour_columns].mean(axis=1)
+        rolling_avg = avg_price.rolling(window=365, min_periods=1).mean()
 
         # Discretize Action Space
         self.action_space = gym.spaces.Discrete(3)
 
         # Discretize State Space
-        features = {
+        states = {
             'storage_level': {'low': 0, 'high': 290, 'bin_size': 10},
             'price': {'low': np.min(env.price_values), 'high': np.max(env.price_values), 'bin_size': 10},
             'hour': {'low': 1, 'high': 25, 'bin_size': 24},
-            'day': {'low': 1, 'high': len(env.price_values), 'bin_size': 10},
+            'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': 10},
             'Season': {'low': 0, 'high': 3, 'bin_size': 4},
-            'Avg_Price': {'low': np.min(env.test_data['Avg_Price']), 'high': np.max(env.test_data['Avg_Price']), 'bin_size': 10},
-            'Rolling_Avg_Price': {'low': np.min(env.test_data['Rolling_Avg_Price']), 'high': np.max(env.test_data['Rolling_Avg_Price']), 'bin_size': 10},
-            'Day_of_Week': {'low': 0, 'high': 6, 'bin_size': 7},
+            'Avg_Price': {'low': np.min(avg_price), 'high': np.max(avg_price), 'bin_size': 10},
+            'Rolling_Avg_Price': {'low': np.min(rolling_avg), 'high': np.max(rolling_avg), 'bin_size': 10},
+            'Day_of_Week': {'low': 0, 'high': 6, 'bin_size': 7}
         }
-        self.bins = [np.linspace(f['low'], f['high'], f['bin_size'] + 1) for f in features.values()]
+        self.bins = [np.linspace(f['low'], f['high'], f['bin_size'] + 1) for f in states.values()]
 
         # Construct Q-table
         action_space_size = (self.action_space.n,)
-        state_space_size = tuple(f['bin_size'] for f in features.values())
+        state_space_size = tuple(f['bin_size'] for f in states.values())
         self.Qtable = np.zeros(state_space_size + action_space_size)
 
     def discretize_state(self, state):
-        """
-        Discretize the state using bins for each feature.
-        Ensure that the state and bins align correctly.
-        """
-        if len(state) != len(self.bins):
-            raise ValueError(
-                f"State length {len(state)} does not match number of bins {len(self.bins)}."
-            )
-
-        discretized_state = [
-            max(0, min(np.digitize(state[i], self.bins[i], right=True) - 1, len(self.bins[i]) - 2))
-            for i in range(len(state))
-        ]
+        state = self.feature_engineering(state)
+        discretized_state = []
+        for i in range(len(state)):
+            val = np.clip(state[i], self.bins[i][0], self.bins[i][-1])
+            bin_idx = np.digitize(val, self.bins[i], right=True) - 1
+            bin_idx = np.clip(bin_idx, 0, len(self.bins[i]) - 2)
+            discretized_state.append(bin_idx)
         return discretized_state
 
     def feature_engineering(self, state):
-
-        # Function to extract seasonal information
-        def get_season(date):
-            if date.month in [12, 1, 2]: return 0  # Winter
-            elif date.month in [3, 4, 5]: return 1  # Spring
-            elif date.month in [6, 7, 8]: return 2  # Summer
-            elif date.month in [9, 10, 11]: return 3  # Autumn
-
-        # Get Season
+        """
+        Engineer additional features from the raw state.
+        Returns only the features defined in self.features.
+        """
         data = self.env.test_data
-        data['PRICES'] = pd.to_datetime(data['PRICES'])
-        date = data['PRICES'][self.env.day]
-        print('date', date, type(date))
-        Season = get_season(date)
-        print('Season', Season)
 
-        # Get Average Price
+        # Get Season - handle index bounds
+        day_index = min(self.env.day, len(data['PRICES']) - 1)
+        date = pd.to_datetime(data['PRICES'].iloc[day_index])
+        month = date.month
+        if month in [12, 1, 2]:
+            Season = 0  # Winter
+        elif month in [3, 4, 5]:
+            Season = 1  # Spring
+        elif month in [6, 7, 8]:
+            Season = 2  # Summer
+        else:
+            Season = 3  # Autumn
 
-        Avg_Price = data['PRICES'].iloc[self.env.day].mean()
-        #Rolling_Avg_Price = data['Avg_Price'].rolling(window=365, min_periods=1).mean()
+        # Calculate average price across hours
+        hour_columns = [col for col in data.columns if 'Hour' in col]
+        Avg_Price = data[hour_columns].iloc[day_index].mean()
 
-        Day_of_Week = ...
+        # Calculate rolling average price
+        if 'Avg_Price' not in data.columns:
+            data['Avg_Price'] = data[hour_columns].mean(axis=1)
+        Rolling_Avg_Price = data['Avg_Price'].rolling(window=365, min_periods=1).mean().iloc[day_index]
 
-        state += [Season, Avg_Price, Rolling_Avg_Price, Day_of_Week]
+        # Get day of week
+        Day_of_Week = date.dayofweek
 
-        return state
+        # Return only the features we defined bins for
+        return [state[0], state[1], state[2], state[3], Season, Avg_Price, Rolling_Avg_Price,
+                Day_of_Week]
 
     def act(self, state, epsilon=0):
-        """
-        Picks action based on epsilon-greedy policy.
-        """
+        # Picks Action based on Epsilon Greedy
         if np.random.uniform(0, 1) < epsilon:
             action = self.action_space.sample()
         else:
             action = np.argmax(self.Qtable[tuple(state)])
         return action
 
+    def potential_function(self, state):
+        return 0
+
     def update_qtable(self, state, action, next_state, reward, learning_rate=0.05):
-        """
-        Update the Q-table using the Q-learning update rule.
-        """
-        state = self.discretize_state(state)
+        # Update State
         next_state = self.discretize_state(next_state)
 
-        Q_target = reward + self.discount_rate * np.max(self.Qtable[tuple(next_state)])
-        delta = learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
-        self.Qtable[tuple(state) + (action,)] += delta
+        # Shape Reward   R(s,a) = R(s,a) - P(s) + y*P(s')
+        shaped_reward = (reward - self.potential_function(state)
+                         + self.discount_rate * self.potential_function(next_state))
 
-    def train(self, n_simulations=1000, start_epsilon=1, end_epsilon=0.05):
-        """
-        Train the agent using Q-learning.
-        """
+        # Update Qtable  Q(s,a) = Q(s,a) + α*(R(s,a) + γ*max(Q(s',a) - Q(s,a))
+        Q_target = shaped_reward + self.discount_rate * np.max(self.Qtable[tuple(next_state)])
+        delta = learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
+        self.Qtable[tuple(state) + (action,)] = self.Qtable[tuple(state) + (action,)] + delta
+
+    def train(self, n_simulations=50, start_epsilon=1, end_epsilon=0.05):
+        # Initialize Epsilon
         epsilon = start_epsilon
         decay_rate = (end_epsilon / start_epsilon) ** (1 / (n_simulations - 1))
 
         for i in range(n_simulations):
-            print(f'Simulation: {i + 1}')
-            state = self.env.reset()
-            terminated = False
+            print(f"Simulation: {i + 1}/{n_simulations}")
 
+            # Initialize
+            environment = self.env
+            state = environment.reset()
+
+            # Rollout
+            terminated = False
             while not terminated:
-                state = self.feature_engineering(state)
-                # state = self.discretize_state(state)
+                state = self.discretize_state(state)
                 action = self.act(state, epsilon)
-                next_state, reward, terminated = self.env.step(action)
+                next_state, reward, terminated = environment.step(action)
                 self.update_qtable(state, action, next_state, reward)
                 state = next_state
 
-            epsilon *= decay_rate
+            # Update epsilon
+            epsilon = epsilon * decay_rate
+
+            # Save states in a txt file to observe what information is stored in the state
+            if 'Data/states.txt' not in os.listdir("Data"):
+                mode = 'w'
+            else:
+                mode = 'a'
+            with open('Data/states.txt', mode) as f:
+                f.write(str(state) + '\n')
 
         # Save Q-table
         np.save(self.q_table_path, self.Qtable)
+        print(f'\nQtable saved to {self.q_table_path}')
 
     def evaluate(self, print_transitions=False):
-        """
-        Evaluate the agent.
-        """
-        self.Qtable = np.load(self.q_table_path)
+        print(self.name)
+
+        # Load Q-table
+        if self.name != 'Heuristic': self.Qtable = np.load(self.q_table_path)
+        print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
+
+        # Initialize
         state = self.env.reset()
         aggregate_reward = 0
-        terminated = False
 
+        # Rollout
+        terminated = False
         while not terminated:
             state = self.discretize_state(state)
             action = self.act(state)
@@ -143,21 +170,26 @@ class QAgent:
                 print("Next state:", next_state)
                 print("Reward:", reward)
 
-        print('Total reward:', aggregate_reward)
+        print(f'Total reward: {round(aggregate_reward)}\n')
+
+
+class Heuristic(QAgent):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.name = 'Heuristic'
+
+    def train(self, a=0, b=0, c=0):
+        print("You don't need to train a heuristic!")
+
+    def act(self, state, epsilon=0):
+        # Heuristic: Picks Action based on time of day
+        if state[2] in [1, 2, 3, 4, 5, 6, 7, 8, 17, 22, 23, 24]:
+            action = 2
+        else:
+            action = 1
+        return action
 
 
 if __name__ == '__main__':
-    dataset_path = 'Data/transformed_dataset.xlsx'
-    data = pd.read_excel(dataset_path)
-    data['PRICES'] = pd.to_datetime(data['PRICES'])
-    data.to_excel(dataset_path, index=False, engine='openpyxl')
-
-
-    environment = DataCenterEnv(path_to_test_data=dataset_path)
-    q_agent = QAgent(environment)
-
-    print("Training Q-learning Agent...")
-    q_agent.train(n_simulations=1000)
-
-    print("\nEvaluating Q-learning Agent...")
-    q_agent.evaluate(print_transitions=True)
+    subprocess.run(['python', 'main.py', '--mode', 'train', '--agent', 'QAgent'])
+    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent'])
