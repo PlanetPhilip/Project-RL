@@ -78,20 +78,14 @@ class QAgent:
 
     def discretize_state(self, state):
         state = self.feature_engineering(state)
-
-        # # Debugging: Print the state after feature engineering
-        # print(f"State after feature engineering: {state}")
-
         discretized_state = []
         for i in range(len(state)):
+            # Ensure the value is within the bin range
             val = np.clip(state[i], self.bins[i][0], self.bins[i][-1])
             bin_idx = np.digitize(val, self.bins[i], right=True) - 1
+            # Ensure the index is within bounds
             bin_idx = np.clip(bin_idx, 0, len(self.bins[i])-2)
             discretized_state.append(bin_idx)
-
-        # # Debugging: Print the discretized state
-        # print(f"Discretized State: {discretized_state}")
-
         return discretized_state
 
     def feature_engineering(self, state):
@@ -254,11 +248,18 @@ class QAgent:
 
     def evaluate(self, print_transitions=False):
         print(self.name)
-
+        
         # Load Q-table
-        if self.name != 'Heuristic': self.Qtable = np.load(self.q_table_path)
+        if self.name != 'Heuristic':
+            try:
+                self.Qtable = np.load(self.q_table_path)
+                print(f"Q-table shape: {self.Qtable.shape}")
+            except Exception as e:
+                print(f"Error loading Q-table: {e}")
+                return
+            
         print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
-
+        
         # Initialize
         state = self.env.reset()
         aggregate_reward = 0

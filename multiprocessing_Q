@@ -67,7 +67,7 @@ def run_experiment(params):
 
 if __name__ == '__main__':
 
-    csv_file = 'Results/experiment_results_Q.csv'
+    csv_file = 'Results/experiment_results_Q_no_reward_shaping.csv'
     file_exists = os.path.isfile(csv_file)
     if not file_exists:
         with open(csv_file, 'w', newline='') as file:
@@ -82,7 +82,7 @@ if __name__ == '__main__':
         # Small Reward
         # Large Reward
         # Learning Rate
-        # Number of Simulations (suggest to be 30-50, make it 10 if you want to do a quick test)
+        # Number of Simulations (make it 10 if you want to do a quick test)
     # 2. Set up the number of processes in the line below:
         # with multiprocessing.Pool(processes=10) as pool:
         # Don't make it too large otherwise each process will take too long to run
@@ -96,12 +96,42 @@ if __name__ == '__main__':
     # Later will not work
 
     state_set1 = ["storage_level", "price", "hour",  'Day_of_Week']
-    bin_size1 = [10,10,24,7]
     state_set2 = ["storage_level", "price", "hour", 'Day_of_Week', 'Season']
-    bin_size2 = [10,10,24,7,3]
+    state_set3 = ["storage_level", "price", "hour", 'Day_of_Week', 'Season', 'Rolling_Avg_Price']
 
-    hyperparameter_sets = [(1, 'Data/train.xlsx', 32394, 50794, 0.01, 2, state_set1, bin_size1),
-                          (2, 'Data/train.xlsx', 32394, 50794, 0.01, 2, state_set2, bin_size2)
+
+    hyperparameter_sets = [(1, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,24,7]),
+                          (2, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5, 10, 24, 7]),
+                          (3, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,12,7]),
+                          (4, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,6,7]),
+                          (5, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,6,3]),
+                          (6, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,5,6,3]),
+                          (7, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,5,24,7]),
+                          (8, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5,5,24,7]),
+                          (9, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5,5,24,3]),
+                          (10, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5,5,12,3]),
+
+                          (11, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,24,7,4]),
+                          (12, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5, 10, 24,7,4]),
+                          (13, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,12,7,4]),
+                          (14, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,6,7,4]),
+                          (15, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,6,3,4]),
+                          (16, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,5,6,3,4]),
+                          (17, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,5,24,7,4]),
+                          (18, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5,5,24,7,4]),
+                          (19, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5,5,24,3,4]),
+                          (20, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5,5,12,3,4]),
+
+                          (21, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,24,7,4,3]),
+                          (22, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5, 10, 24,7,4,3]),
+                          (23, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,12,7,4,3]),
+                          (24, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,6,7,4,3]),
+                          (25, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,6,3,4,3]),
+                          (26, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,5,6,3,4,3]),
+                          (27, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,5,24,7,4,3]),
+                          (28, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,24,7,4,3]),
+                          (29, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,24,3,4,3]),
+                          (30, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,12,3,4,3]),
                 ]
 
     # Use multiprocessing to run experiments
