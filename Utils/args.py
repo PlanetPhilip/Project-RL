@@ -9,7 +9,9 @@ def parse_arguments():
     args.add_argument('--large_reward', type=int, default=100000)
     args.add_argument('--learning_rate', type=float, default=0.05)
     args.add_argument('--n_simulations', type=int, default=10)
-    args.add_argument('--state_choice', type=str, default='storage_level,price,hour,day,Season')
+    args.add_argument('--state_choice', type=str, default='storage_level,price,hour')
+    args.add_argument('--state_bin_size', type=str, default='10,10,24')
     args = args.parse_args()
     args.state_choice = args.state_choice.split(',')
-    return args.mode, args.agent, args.path, args.small_reward, args.large_reward, args.learning_rate, args.n_simulations, args.state_choice
+    args.state_bin_size = args.state_bin_size.split(',')
+    return args.mode, args.agent, args.path, args.small_reward, args.large_reward, args.learning_rate, args.n_simulations, args.state_choice, args.state_bin_size

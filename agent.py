@@ -13,7 +13,9 @@ class QAgent:
                  large_reward=100000, 
                  learning_rate=0.05, 
                  n_simulations=10,
-                 state_choice=["storage_level", "price", "hour", "day"]):
+                 state_choice=["storage_level", "price", "hour", "Day_of_Week"],
+                 state_bin_size=[10, 10, 24, 7]
+                 ):
         
         self.name = "QAgent"
         self.env = env
@@ -24,6 +26,7 @@ class QAgent:
         self.learning_rate = learning_rate
         self.n_simulations = n_simulations
         self.state_choice = state_choice
+        self.state_bin_size = state_bin_size
 
         # Calculate initial average price
         hour_columns = [col for col in env.test_data.columns if 'Hour' in col]
@@ -33,16 +36,31 @@ class QAgent:
         # Discretize Action Space
         self.action_space = gym.spaces.Discrete(3)
 
+        # Define the bin size for each state. If not defined, set 1 as default.
+        custom_bin_size = {
+            "storage_level": 1,
+            "price": 1,
+            "hour": 1,
+            "day": 1,
+            "Season": 1,
+            "Avg_Price": 1,
+            "Rolling_Avg_Price": 1,
+            "Day_of_Week": 1
+        }
+
+        for state, bin_size in zip(self.state_choice, self.state_bin_size):
+            custom_bin_size[state] = int(bin_size)
+
         # Discretize State Space
         states = {
-            'storage_level': {'low': 0, 'high': 290, 'bin_size': 10},
-            'price': {'low': np.min(env.price_values), 'high': np.max(env.price_values), 'bin_size': 10},
-            'hour': {'low': 1, 'high': 25, 'bin_size': 24},
-            'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': 10},
-            'Season': {'low': 0, 'high': 3, 'bin_size': 4},
-            'Avg_Price': {'low': np.min(avg_price), 'high': np.max(avg_price), 'bin_size': 10},
-            'Rolling_Avg_Price': {'low': np.min(rolling_avg), 'high': np.max(rolling_avg), 'bin_size': 10},
-            'Day_of_Week': {'low': 0, 'high': 6, 'bin_size': 7}
+            'storage_level': {'low': 0, 'high': 290, 'bin_size': custom_bin_size['storage_level']},
+            'price': {'low': np.min(env.price_values), 'high': np.max(env.price_values), 'bin_size': custom_bin_size['price']},
+            'hour': {'low': 1, 'high': 25, 'bin_size': custom_bin_size['hour']},
+            'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': custom_bin_size['day']},
+            'Season': {'low': 0, 'high': 3, 'bin_size': custom_bin_size['Season']},
+            'Avg_Price': {'low': np.min(avg_price), 'high': np.max(avg_price), 'bin_size': custom_bin_size['Avg_Price']},
+            'Rolling_Avg_Price': {'low': np.min(rolling_avg), 'high': np.max(rolling_avg), 'bin_size': custom_bin_size['Rolling_Avg_Price']},
+            'Day_of_Week': {'low': 0, 'high': 6, 'bin_size': custom_bin_size['Day_of_Week']}
         }
         
         # Create state_space for all possible states
@@ -146,38 +164,39 @@ class QAgent:
 
         # Consider the commented out hours as ideal buying hours later,
         # And shaping the price as well on an average basis.
+        return 0
+    
+        # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
+        # # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
 
-        ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
-        # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
+        # ideal_buying_day = [4,5]
+        # ideal_selling_hour = [10,11,12,13,14, 19, 20]
 
-        ideal_buying_day = [4,5]
-        ideal_selling_hour = [10,11,12,13,14, 19, 20]
+        # # ideal_selling_hour = [11,12,13]
+        # ideal_selling_day = [0,2]
 
-        # ideal_selling_hour = [11,12,13]
-        ideal_selling_day = [0,2]
+        # state_day_of_week = state[3]
+        # state_hour = state[2]
 
-        state_day = state[-1]
-        state_hour = state[2]
+        # additional_reward = 0
 
-        additional_reward = 0
+        # # Give large reward if agent buys on ideal buying hours
+        # if action == 2 and state_hour in ideal_buying_hour:
+        #     additional_reward += self.large_reward
 
-        # Give large reward if agent buys on ideal buying hours
-        if action == 2 and state_hour in ideal_buying_hour:
-            additional_reward += self.large_reward
+        # # Give small reward if agent buys on ideal buying days
+        # if action == 2 and state_day_of_week in ideal_buying_day:
+        #     additional_reward += self.small_reward
 
-        # Give small reward if agent buys on ideal buying days
-        if action == 2 and state_day in ideal_buying_day:
-            additional_reward += self.small_reward
+        # # Give large reward if agent sells on ideal selling hours
+        # if action == 0 and state_hour in ideal_selling_hour:
+        #     additional_reward += self.large_reward
 
-        # Give large reward if agent sells on ideal selling hours
-        if action == 0 and state_hour in ideal_selling_hour:
-            additional_reward += self.large_reward
+        # # Give small reward if agent sells on ideal selling days
+        # if action == 0 and state_day_of_week in ideal_selling_day:
+        #     additional_reward += self.small_reward
 
-        # Give small reward if agent sells on ideal selling days
-        if action == 0 and state_day in ideal_selling_day:
-            additional_reward += self.small_reward
-
-        return additional_reward
+        # return additional_reward
 
     def update_qtable(self, state, action, next_state, reward):
         # # Debugging: Print the next state before accessing
@@ -288,6 +307,8 @@ if __name__ == '__main__':
                     '--large_reward', '30000', 
                     '--learning_rate', '0.01', 
                     '--n_simulations', '10', 
-                    '--state_choice', ",".join(["storage_level", "price", "hour", "day", "Season"])])
+                    '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week"]),
+                    '--state_bin_size', ",".join(map(str, [10, 10, 24, 7]))
+                    ])
     
     subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent'])

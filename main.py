@@ -6,7 +6,7 @@ import sys
 TRAIN = 'Data/train.xlsx'
 VALIDATE = 'Data/validate.xlsx'
 
-def train(agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice):
+def train(agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size):
     environment = DataCenterEnv(path or TRAIN)
     agent = globals()[agent](
         environment, 
@@ -14,7 +14,8 @@ def train(agent, path, small_reward, large_reward, learning_rate, n_simulations,
         large_reward=large_reward, 
         learning_rate=learning_rate, 
         n_simulations=n_simulations,
-        state_choice=state_choice
+        state_choice=state_choice,
+        state_bin_size=state_bin_size
         )
     
     agent.train()
@@ -27,9 +28,9 @@ def validate(agent, path):
 if __name__ == '__main__':
     # Command Line Support
     if len(sys.argv) > 1:
-        mode, agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice = parse_arguments()
+        mode, agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size = parse_arguments()
     else:
-        mode, agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice = (
+        mode, agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size = (
             'train', 
             'QAgent', 
             '', 
@@ -37,11 +38,12 @@ if __name__ == '__main__':
             30000, 
             0.01, 
             10, 
-            ['storage_level', 'price', 'hour', 'day', 'Season']
+            ['storage_level', 'price', 'hour', 'Day_of_Week'],
+            [10, 10, 24, 7]    
             )
 
     # Run
     if mode == 'train':
-        locals()[mode](agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice)
+        locals()[mode](agent, path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size)
     elif mode == 'validate':
         locals()[mode](agent, path)
