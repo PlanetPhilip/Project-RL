@@ -13,7 +13,7 @@ class QAgent:
                  large_reward=100000, 
                  learning_rate=0.05, 
                  n_simulations=10,
-                 state_choice=["storage_level", "price", "hour", "day"]):
+                 state_choice=["storage_level", "price", "hour", "day", 'Day_of_Week']):
         
         self.name = "QAgent"
         self.env = env
@@ -39,35 +39,47 @@ class QAgent:
             'price': {'low': np.min(env.price_values), 'high': np.max(env.price_values), 'bin_size': 10},
             'hour': {'low': 1, 'high': 25, 'bin_size': 24},
             'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': 10},
-            # 'Season': {'low': 0, 'high': 3, 'bin_size': 4},
-            # 'Avg_Price': {'low': np.min(avg_price), 'high': np.max(avg_price), 'bin_size': 10},
-            # 'Rolling_Avg_Price': {'low': np.min(rolling_avg), 'high': np.max(rolling_avg), 'bin_size': 10},
+            'Season': {'low': 0, 'high': 3, 'bin_size': 4},
+            'Avg_Price': {'low': np.min(avg_price), 'high': np.max(avg_price), 'bin_size': 10},
+            'Rolling_Avg_Price': {'low': np.min(rolling_avg), 'high': np.max(rolling_avg), 'bin_size': 10},
             'Day_of_Week': {'low': 0, 'high': 6, 'bin_size': 7}
         }
         
-        state_space = [states[state] for state in self.state_choice]
+        # Create state_space for all possible states
+        self.all_state_bins = {state: np.linspace(states[state]['low'], states[state]['high'], states[state]['bin_size'] + 1) for state in states}
 
-        self.bins = [np.linspace(f['low'], f['high'], f['bin_size'] + 1) for f in states.values()]
+        # Create state_space based on the chosen states
+        state_space = {state: states[state] for state in self.state_choice if state in states}
+
+        self.bins = [np.linspace(f['low'], f['high'], f['bin_size'] + 1) for f in state_space.values()]
 
         # Construct Q-table
         action_space_size = (self.action_space.n,)
-        state_space_size = tuple(f['bin_size'] for f in states.values())
+        state_space_size = tuple(f['bin_size'] for f in state_space.values())
         self.Qtable = np.zeros(state_space_size + action_space_size)
 
     def discretize_state(self, state):
         state = self.feature_engineering(state)
+
+        # # Debugging: Print the state after feature engineering
+        # print(f"State after feature engineering: {state}")
+
         discretized_state = []
         for i in range(len(state)):
             val = np.clip(state[i], self.bins[i][0], self.bins[i][-1])
             bin_idx = np.digitize(val, self.bins[i], right=True) - 1
             bin_idx = np.clip(bin_idx, 0, len(self.bins[i])-2)
             discretized_state.append(bin_idx)
+
+        # # Debugging: Print the discretized state
+        # print(f"Discretized State: {discretized_state}")
+
         return discretized_state
 
     def feature_engineering(self, state):
         """
         Engineer additional features from the raw state.
-        Returns only the features defined in self.features.
+        Returns only the features defined in self.state_choice.
         """
         data = self.env.test_data
 
@@ -75,32 +87,46 @@ class QAgent:
         day_index = min(self.env.day, len(data['PRICES']) - 1)
         date = pd.to_datetime(data['PRICES'].iloc[day_index])
         month = date.month
-        # if month in [12, 1, 2]:
-        #     Season = 0  # Winter
-        # elif month in [3, 4, 5]:
-        #     Season = 1  # Spring
-        # elif month in [6, 7, 8]:
-        #     Season = 2  # Summer
-        # else:
-        #     Season = 3  # Autumn
+        if month in [12, 1, 2]:
+            Season = 0  # Winter
+        elif month in [3, 4, 5]:
+            Season = 1  # Spring
+        elif month in [6, 7, 8]:
+            Season = 2  # Summer
+        else:
+            Season = 3  # Autumn
 
         # Calculate average price across hours
         hour_columns = [col for col in data.columns if 'Hour' in col]
         Avg_Price = data[hour_columns].iloc[day_index].mean()
 
         # Calculate rolling average price
-        # if 'Avg_Price' not in data.columns:
-        #      data['Avg_Price'] = data[hour_columns].mean(axis=1)
-        # Rolling_Avg_Price = data['Avg_Price'].rolling(window=365, min_periods=1).mean().iloc[day_index]
+        if 'Avg_Price' not in data.columns:
+             data['Avg_Price'] = data[hour_columns].mean(axis=1)
+        Rolling_Avg_Price = data['Avg_Price'].rolling(window=365, min_periods=1).mean().iloc[day_index]
 
         # Get day of week
         Day_of_Week = date.dayofweek
 
-        # Return only the features we defined bins for
-        return [state[0], state[1], state[2], state[3], Day_of_Week]
-    
-        # return [state[0], state[1], state[2], state[3], Season, Avg_Price, Rolling_Avg_Price,
-        #        Day_of_Week]
+        # Create a dictionary of all possible features
+        all_features = {
+            'storage_level': state[0],
+            'price': state[1],
+            'hour': state[2],
+            'day': state[3],
+            'Season': Season,
+            'Avg_Price': Avg_Price,
+            'Rolling_Avg_Price': Rolling_Avg_Price,
+            'Day_of_Week': Day_of_Week
+        }
+
+        # Return only the features we choose to let agent use
+        selected_state = [all_features[state_name] for state_name in self.state_choice if state_name in all_features]
+
+        # # Debugging: Print the selected state
+        # print(f"Selected State: {selected_state}")
+
+        return selected_state
 
     def act(self, state, epsilon=0):
         # Picks Action based on Epsilon Greedy
@@ -130,7 +156,7 @@ class QAgent:
         # ideal_selling_hour = [11,12,13]
         ideal_selling_day = [0,2]
 
-        state_day = state[4]
+        state_day = state[-1]
         state_hour = state[2]
 
         additional_reward = 0
@@ -154,13 +180,19 @@ class QAgent:
         return additional_reward
 
     def update_qtable(self, state, action, next_state, reward):
-        # Update State
+        # # Debugging: Print the next state before accessing
+        # print(f"Next State in update_qtable: {next_state}")
+
+        # Ensure next_state is discretized
         next_state = self.discretize_state(next_state)
+
+        # # Debugging: Print the discretized next state
+        # print(f"Discretized Next State: {next_state}")
 
         # Shape Reward   r'(s,a s') = r(s,a,s) + (gamma * P(s') - P(s))
         shaped_reward = (reward + ((self.discount_rate * self.potential_function(next_state, action)) - self.potential_function(state, action)))
 
-        # Update Qtable  Q(s,a) = Q(s,a) + α*(R(s,a) + γ*max(Q(s',a) - Q(s,a))
+        # Update Qtable
         Q_target = shaped_reward + self.discount_rate * np.max(self.Qtable[tuple(next_state)])
         delta = self.learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
         self.Qtable[tuple(state) + (action,)] = self.Qtable[tuple(state) + (action,)] + delta
@@ -249,5 +281,13 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    # subprocess.run(['python', 'main.py', '--mode', 'train', '--agent', 'QAgent', '--small_reward', '50000', '--large_reward', '100000', '--learning_rate', '0.05', '--n_simulations', '10'])
-    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent'])
+    subprocess.run(['python', 'main.py', 
+                    '--mode', 'train', 
+                    '--agent', 'QAgent', 
+                    '--small_reward', '10000', 
+                    '--large_reward', '30000', 
+                    '--learning_rate', '0.01', 
+                    '--n_simulations', '10', 
+                    '--state_choice', ",".join(["storage_level", "price", "hour", "day", "Season"])])
+    
+    # subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent'])
