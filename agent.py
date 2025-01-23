@@ -3,6 +3,53 @@ import numpy as np
 import subprocess
 import os
 import pandas as pd
+import time
+import functools
+from collections import defaultdict
+
+class TimingStats:
+    def __init__(self):
+        self.function_times = defaultdict(list)
+        
+    def add_timing(self, func_name, execution_time):
+        self.function_times[func_name].append(execution_time)
+        
+    def get_stats(self):
+        stats = {}
+        for func_name, times in self.function_times.items():
+            stats[func_name] = {
+                'total_calls': len(times),
+                'total_time': sum(times),
+                'average_time': sum(times) / len(times),
+                'min_time': min(times),
+                'max_time': max(times)
+            }
+        return stats
+    
+    def print_stats(self):
+        stats = self.get_stats()
+        print("\nFunction Timing Statistics:")
+        print("-" * 80)
+        print(f"{'Function Name':<30} {'Calls':<10} {'Total(s)':<12} {'Avg(ms)':<12} {'Min(ms)':<12} {'Max(ms)':<12}")
+        print("-" * 80)
+        for func_name, data in stats.items():
+            print(f"{func_name:<30} {data['total_calls']:<10} {data['total_time']:<12.3f} "
+                  f"{data['average_time']*1000:<12.3f} {data['min_time']*1000:<12.3f} "
+                  f"{data['max_time']*1000:<12.3f}")
+
+def timing_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        
+        # Get the instance (self) from args and update its timing stats
+        if args and hasattr(args[0], 'timing_stats'):
+            args[0].timing_stats.add_timing(func.__name__, end_time - start_time)
+        
+        return result
+    return wrapper
 
 class QAgent:
 
@@ -14,7 +61,7 @@ class QAgent:
                  learning_rate=0.05, 
                  n_simulations=10,
                  state_choice=["storage_level", "price", "hour", "Day_of_Week"],
-                 state_bin_size=[10, 10, 24, 7]
+                 state_bin_size=[10, 10, 6, 7]
                  ):
         
         self.name = "QAgent"
@@ -27,6 +74,9 @@ class QAgent:
         self.n_simulations = n_simulations
         self.state_choice = state_choice
         self.state_bin_size = state_bin_size
+
+        # Add timing stats instance
+        self.timing_stats = TimingStats()
 
         # Calculate initial average price
         hour_columns = [col for col in env.test_data.columns if 'Hour' in col]
@@ -71,12 +121,21 @@ class QAgent:
 
         self.bins = [np.linspace(f['low'], f['high'], f['bin_size'] + 1) for f in state_space.values()]
 
+        # Print the lens of the bins
+        print(f"Bins: {self.bins}")
+        print(f"Bins length: {len(self.bins)}")
+        print(f"State space: {state_space}")
+
         # Construct Q-table
         action_space_size = (self.action_space.n,)
         state_space_size = tuple(f['bin_size'] for f in state_space.values())
         self.Qtable = np.zeros(state_space_size + action_space_size)
 
+    @timing_decorator
     def discretize_state(self, state):
+        # # Debugging: Print the state before discretization
+        # print(f"State before discretization: {state}")
+
         state = self.feature_engineering(state)
         discretized_state = []
         for i in range(len(state)):
@@ -88,6 +147,7 @@ class QAgent:
             discretized_state.append(bin_idx)
         return discretized_state
 
+    @timing_decorator
     def feature_engineering(self, state):
         """
         Engineer additional features from the raw state.
@@ -140,6 +200,7 @@ class QAgent:
 
         return selected_state
 
+    @timing_decorator
     def act(self, state, epsilon=0):
         # Picks Action based on Epsilon Greedy
         if np.random.uniform(0, 1) < epsilon:
@@ -148,6 +209,7 @@ class QAgent:
             action = np.argmax(self.Qtable[tuple(state)])
         return action
 
+    @timing_decorator
     def potential_function(self, state, action):
         """
         Potential function for shaping the reward function.
@@ -192,6 +254,7 @@ class QAgent:
 
         # return additional_reward
 
+    @timing_decorator
     def update_qtable(self, state, action, next_state, reward):
         # # Debugging: Print the next state before accessing
         # print(f"Next State in update_qtable: {next_state}")
@@ -210,7 +273,9 @@ class QAgent:
         delta = self.learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
         self.Qtable[tuple(state) + (action,)] = self.Qtable[tuple(state) + (action,)] + delta
 
+    @timing_decorator
     def train(self):
+        start_time = time.time()
         # Initialize Epsilon
         epsilon = 1
         decay_rate = (0.05 / 1) ** (1 / (self.n_simulations - 1))
@@ -246,8 +311,19 @@ class QAgent:
         np.save(self.q_table_path, self.Qtable)
         print(f'\nQtable saved to {self.q_table_path}')
 
+        # Print timing statistics at the end of training
+        training_time = time.time() - start_time
+        print(f"\nTotal training time: {training_time:.2f} seconds")
+        self.timing_stats.print_stats()
+
+    @timing_decorator
     def evaluate(self, print_transitions=False):
+        start_time = time.time()
         print(self.name)
+        print("Start evaluating:")
+        print(f"Q-table shape: {self.Qtable.shape}")
+        print(f"Q-table: {self.Qtable}")
+        print(f"Bins: {self.bins}")
         
         # Load Q-table
         if self.name != 'Heuristic':
@@ -264,6 +340,21 @@ class QAgent:
         state = self.env.reset()
         aggregate_reward = 0
 
+        # Create a txt file to store the transition profile 
+        with open('Results/transition_profile_no_rewardshaping.txt', 'w') as f:
+            f.write("Transition Profile during evaluationwithout reward shaping:\n")
+            f.write(f"Q-table shape: {self.Qtable.shape}\n")
+            f.write(f"Q-table: {self.Qtable}\n")
+            f.write(f"State choice: {self.state_choice}\n")
+            f.write(f"State bin size: {self.state_bin_size}\n")
+            f.write(f"Bins length: {len(self.bins)}\n")
+            f.write(f"Bins: {self.bins}\n")
+            f.write(f"Discount rate: {self.discount_rate}\n")
+            f.write(f"Small reward: {self.small_reward}\n")
+            f.write(f"Large reward: {self.large_reward}\n")
+            f.write(f"Learning rate: {self.learning_rate}\n")
+            f.write(f"N simulations: {self.n_simulations}\n")
+
         # Rollout
         terminated = False
         while not terminated:
@@ -272,6 +363,8 @@ class QAgent:
             next_state, reward, terminated = self.env.step(action)
             state = next_state
             aggregate_reward += reward
+            with open('Results/transition_profile_no_rewardshaping.txt', 'a') as f:
+                f.write(f"State: {state}, Action: {action}, Reward: {reward}, Next state: {next_state}\n")
 
             if print_transitions:
                 print("Action:", action)
@@ -280,6 +373,11 @@ class QAgent:
                 
 
         print(f'Total reward: {round(aggregate_reward)}\n')
+
+        # Print timing statistics at the end of evaluation
+        evaluation_time = time.time() - start_time
+        print(f"\nTotal evaluation time: {evaluation_time:.2f} seconds")
+        self.timing_stats.print_stats()
 
 
 class Heuristic(QAgent):
