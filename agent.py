@@ -123,8 +123,10 @@ class QAgent:
 
         ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
         # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
+
         ideal_buying_day = [4,5]
         ideal_selling_hour = [10,11,12,13,14, 19, 20]
+
         # ideal_selling_hour = [11,12,13]
         ideal_selling_day = [0,2]
 
@@ -132,15 +134,20 @@ class QAgent:
         state_hour = state[2]
 
         additional_reward = 0
+
+        # Give large reward if agent buys on ideal buying hours
         if action == 2 and state_hour in ideal_buying_hour:
             additional_reward += self.large_reward
 
+        # Give small reward if agent buys on ideal buying days
         if action == 2 and state_day in ideal_buying_day:
             additional_reward += self.small_reward
 
+        # Give large reward if agent sells on ideal selling hours
         if action == 0 and state_hour in ideal_selling_hour:
             additional_reward += self.large_reward
 
+        # Give small reward if agent sells on ideal selling days
         if action == 0 and state_day in ideal_selling_day:
             additional_reward += self.small_reward
 

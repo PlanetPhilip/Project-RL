@@ -14,7 +14,7 @@ def extract_total_reward(output):
 
     for line in output.splitlines():
         if "Explored" in line:
-            explored = float(line.split(":")[1].strip())
+            explored = float(line.split(":")[1].strip().replace("%", ""))
         if "Total reward:" in line:
             # Extract the numerical value and convert it to float
             total_reward = float(line.split(":")[1].strip())
@@ -26,7 +26,6 @@ def run_experiment(params):
     param_set_nr, env_path, small_reward, large_reward, learning_rate, n_simulations = params
 
     
-
     # Run training
     subprocess.run([
         'python', 'main.py', 
@@ -74,28 +73,33 @@ if __name__ == '__main__':
             writer.writerow(['Param Set', 'Small Reward', 'Large Reward', 'Learning Rate', 'Simulations', 'Explored', 'Total Reward'])
     
     # Define different sets of hyperparameters
+    
+    # How to use it?
+    # 1. fill in the following parameters in a bracket sequentially:
+        # Param Set (index No. of the parameter set)
+        # Small Reward
+        # Large Reward
+        # Learning Rate
+        # Number of Simulations (suggest to be 30-50, make it 10 if you want to do a quick test)
+    # 2. Set up the number of processes in the line below:
+        # with multiprocessing.Pool(processes=10) as pool:
+        # Don't make it too large otherwise each process will take too long to run
+        
+    # 3. Run the code
+    # Result will be appended automatically in the csv file: Results/experiment_results_Q.csv
+
     hyperparameter_sets = [
-        (1, 'Data/train.xlsx', 50000, 100000, 0.05, 10),
-        (2, 'Data/train.xlsx', 50000, 100000, 0.01, 10),
-        (3, 'Data/train.xlsx', 100000, 200000, 0.05, 10),
-        (4, 'Data/train.xlsx', 25000, 50000, 0.05, 10),
-        (5, 'Data/train.xlsx', 10, 50, 0.05, 10),
-        (6, 'Data/train.xlsx', 50, 100, 0.05, 10),
-        (7, 'Data/train.xlsx', 100000, 200000, 0.01, 10),
-        (8, 'Data/train.xlsx', 25000, 50000, 0.01, 10),
-        (9, 'Data/train.xlsx', 10, 50, 0.01, 10),
-        (10, 'Data/train.xlsx', 50, 100, 0.01, 10),
-        (11, 'Data/train.xlsx', 100000, 200000, 0.05, 10),
-        (12, 'Data/train.xlsx', 25000, 50000, 0.05, 10),
-        (13, 'Data/train.xlsx', 10, 50, 0.05, 10),
-        (14, 'Data/train.xlsx', 50, 100, 0.05, 10),
-        (15, 'Data/train.xlsx', 100000, 200000, 0.01, 10),
-        (16, 'Data/train.xlsx', 25000, 50000, 0.01, 10),
-        (17, 'Data/train.xlsx', 10, 50, 0.01, 10),
-        (18, 'Data/train.xlsx', 50, 100, 0.01, 10),
-        (19, 'Data/train.xlsx', 100000, 200000, 0.05, 10),
-        (20, 'Data/train.xlsx', 25000, 50000, 0.05, 10),
-        # Add more hyperparameter sets as needed
+        (21, 'Data/train.xlsx', -100000, -200000, 0.05, 50),
+        (22, 'Data/train.xlsx', -25000, -50000, 0.05, 50),
+        (23, 'Data/train.xlsx', -10, -50, 0.05, 50),
+        (24, 'Data/train.xlsx', -50, -100, 0.05, 50),
+        (25, 'Data/train.xlsx', -100000, -200000, 0.01, 50),
+        (26, 'Data/train.xlsx', -25000, -50000, 0.01, 50),
+        (27, 'Data/train.xlsx', -10, -50, 0.01, 50),
+        (28, 'Data/train.xlsx', -50, -100, 0.01, 50),
+        (29, 'Data/train.xlsx', -100000, -200000, 0.05, 50),
+        (30, 'Data/train.xlsx', -25000, -50000, 0.05, 50),
+        ()
     ]
 
     # Use multiprocessing to run experiments
