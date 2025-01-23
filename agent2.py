@@ -188,11 +188,11 @@ class DQAgent:
         loss.backward()
         self.online_network.optimizer.step()
 
-def train_dqn(param_set_nr, env_path, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size, n_simulations):
+def train_dqn(param_set_nr, env_path, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size, n_simulations, activation_functions):
     env = DataCenterEnv(env_path)
     agent = DQAgent(env, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size)
     avg_rewards = agent.train(n_simulations)
-
+    
     # Plot the behaviour of average reward
     plt.plot(1000*(np.arange(len(avg_rewards))+1), avg_rewards)
     plt.axhline(y=-110, color='r', linestyle='-')

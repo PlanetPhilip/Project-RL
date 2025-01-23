@@ -5,5 +5,9 @@ def parse_arguments():
     args.add_argument('--mode', type=str, default='validate', choices=['train', 'validate'])
     args.add_argument('--agent', type=str, default='QAgent', choices=['QAgent', 'Heuristic'])
     args.add_argument('--path', type=str, default=None)
+    args.add_argument('--small_reward', type=int, default=50000)
+    args.add_argument('--large_reward', type=int, default=100000)
+    args.add_argument('--learning_rate', type=float, default=0.05)
+    args.add_argument('--n_simulations', type=int, default=10)
     args = args.parse_args()
-    return args.mode, args.agent, args.path
+    return args.mode, args.agent, args.path, args.small_reward, args.large_reward, args.learning_rate, args.n_simulations

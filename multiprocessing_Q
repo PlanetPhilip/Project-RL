@@ -1,0 +1,103 @@
+import multiprocessing
+from agent import QAgent
+from env import DataCenterEnv
+import torch.nn as nn
+import subprocess
+import os
+import csv
+
+
+def extract_total_reward(output):
+    # Assuming the total reward is printed in the format: "Total reward: <value>"
+    explored = 0
+    total_reward = 0
+
+    for line in output.splitlines():
+        if "Explored" in line:
+            explored = float(line.split(":")[1].strip())
+        if "Total reward:" in line:
+            # Extract the numerical value and convert it to float
+            total_reward = float(line.split(":")[1].strip())
+
+    return explored, total_reward
+
+def run_experiment(params):
+
+    param_set_nr, env_path, small_reward, large_reward, learning_rate, n_simulations = params
+
+    
+
+    # Run training
+    subprocess.run([
+        'python', 'main.py', 
+        '--mode', 'train', 
+        '--agent', 'QAgent', 
+        '--path', env_path,
+        '--small_reward', str(small_reward),
+        '--large_reward', str(large_reward),
+        '--learning_rate', str(learning_rate),
+        '--n_simulations', str(n_simulations)
+    ])
+    
+    # Run validation
+    result = subprocess.run([
+        'python', 'main.py', 
+        '--mode', 'validate', 
+        '--agent', 'QAgent', 
+        '--path', env_path
+    ], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"Error during validation: {result.stderr}")
+        return
+
+
+
+    explored, total_reward = extract_total_reward(result.stdout)
+
+    csv_file = 'Results/experiment_results_Q.csv'
+    with open(csv_file, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([param_set_nr, small_reward, large_reward, learning_rate, n_simulations, explored, total_reward])
+        
+    print(f"Total reward: {total_reward}")
+    return total_reward
+
+
+if __name__ == '__main__':
+
+    csv_file = 'Results/experiment_results_Q.csv'
+    file_exists = os.path.isfile(csv_file)
+    if not file_exists:
+        with open(csv_file, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Param Set', 'Small Reward', 'Large Reward', 'Learning Rate', 'Simulations', 'Explored', 'Total Reward'])
+    
+    # Define different sets of hyperparameters
+    hyperparameter_sets = [
+        (1, 'Data/train.xlsx', 50000, 100000, 0.05, 10),
+        (2, 'Data/train.xlsx', 50000, 100000, 0.01, 10),
+        (3, 'Data/train.xlsx', 100000, 200000, 0.05, 10),
+        (4, 'Data/train.xlsx', 25000, 50000, 0.05, 10),
+        (5, 'Data/train.xlsx', 10, 50, 0.05, 10),
+        (6, 'Data/train.xlsx', 50, 100, 0.05, 10),
+        (7, 'Data/train.xlsx', 100000, 200000, 0.01, 10),
+        (8, 'Data/train.xlsx', 25000, 50000, 0.01, 10),
+        (9, 'Data/train.xlsx', 10, 50, 0.01, 10),
+        (10, 'Data/train.xlsx', 50, 100, 0.01, 10),
+        (11, 'Data/train.xlsx', 100000, 200000, 0.05, 10),
+        (12, 'Data/train.xlsx', 25000, 50000, 0.05, 10),
+        (13, 'Data/train.xlsx', 10, 50, 0.05, 10),
+        (14, 'Data/train.xlsx', 50, 100, 0.05, 10),
+        (15, 'Data/train.xlsx', 100000, 200000, 0.01, 10),
+        (16, 'Data/train.xlsx', 25000, 50000, 0.01, 10),
+        (17, 'Data/train.xlsx', 10, 50, 0.01, 10),
+        (18, 'Data/train.xlsx', 50, 100, 0.01, 10),
+        (19, 'Data/train.xlsx', 100000, 200000, 0.05, 10),
+        (20, 'Data/train.xlsx', 25000, 50000, 0.05, 10),
+        # Add more hyperparameter sets as needed
+    ]
+
+    # Use multiprocessing to run experiments
+    with multiprocessing.Pool(processes=10) as pool:
+        pool.map(run_experiment, hyperparameter_sets)
