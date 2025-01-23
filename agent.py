@@ -13,7 +13,7 @@ class QAgent:
                  large_reward=100000, 
                  learning_rate=0.05, 
                  n_simulations=10,
-                 state_choice=["storage_level", "price", "hour", "day", 'Day_of_Week']):
+                 state_choice=["storage_level", "price", "hour", "day"]):
         
         self.name = "QAgent"
         self.env = env
@@ -290,4 +290,4 @@ if __name__ == '__main__':
                     '--n_simulations', '10', 
                     '--state_choice', ",".join(["storage_level", "price", "hour", "day", "Season"])])
     
-    # subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent'])
+    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent'])

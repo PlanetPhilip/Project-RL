@@ -23,7 +23,7 @@ def extract_total_reward(output):
 
 def run_experiment(params):
 
-    param_set_nr, env_path, small_reward, large_reward, learning_rate, n_simulations = params
+    param_set_nr, env_path, small_reward, large_reward, learning_rate, n_simulations, state_choice = params
 
     
     # Run training
@@ -35,7 +35,8 @@ def run_experiment(params):
         '--small_reward', str(small_reward),
         '--large_reward', str(large_reward),
         '--learning_rate', str(learning_rate),
-        '--n_simulations', str(n_simulations)
+        '--n_simulations', str(n_simulations),
+        '--state_choice', ",".join(state_choice)
     ])
     
     # Run validation
@@ -88,36 +89,36 @@ if __name__ == '__main__':
     # 3. Run the code
     # Result will be appended automatically in the csv file: Results/experiment_results_Q.csv
 
-    hyperparameter_sets = [(31, 'Data/train.xlsx', 32394, 50794, 0.01, 50),
-                    (32, 'Data/train.xlsx', 31006, 41873, 0.01, 50),
-                    (33, 'Data/train.xlsx', 36234, 49938, 0.01, 50),
-                    (34, 'Data/train.xlsx', 25626, 44615, 0.01, 50),
-                    (35, 'Data/train.xlsx', 35014, 49089, 0.01, 50),
-                    (36, 'Data/train.xlsx', 23270, 37302, 0.01, 50),
-                    (37, 'Data/train.xlsx', 23489, 34851, 0.01, 50),
-                    (38, 'Data/train.xlsx', 20235, 31131, 0.01, 50),
-                    (39, 'Data/train.xlsx', 26660, 37133, 0.01, 50),
-                    (40, 'Data/train.xlsx', 38520, 53671, 0.01, 50),
-                    (41, 'Data/train.xlsx', 26619, 41202, 0.01, 50),
-                    (42, 'Data/train.xlsx', 28019, 43154, 0.01, 50),
-                    (43, 'Data/train.xlsx', 25317, 45060, 0.01, 50),
-                    (44, 'Data/train.xlsx', 21241, 39108, 0.01, 50),
-                    (45, 'Data/train.xlsx', 33466, 50722, 0.01, 50),
-                    (46, 'Data/train.xlsx', 32099, 47881, 0.01, 50),
-                    (47, 'Data/train.xlsx', 37383, 55669, 0.01, 50),
-                    (48, 'Data/train.xlsx', 26927, 38791, 0.01, 50),
-                    (49, 'Data/train.xlsx', 32626, 43604, 0.01, 50),
-                    (50, 'Data/train.xlsx', 28359, 45342, 0.01, 50),
-                    (51, 'Data/train.xlsx', 39767, 52712, 0.01, 50),
-                    (52, 'Data/train.xlsx', 27703, 41692, 0.01, 50),
-                    (53, 'Data/train.xlsx', 26795, 44970, 0.01, 50),
-                    (54, 'Data/train.xlsx', 24413, 38423, 0.01, 50),
-                    (55, 'Data/train.xlsx', 31692, 48125, 0.01, 50),
-                    (56, 'Data/train.xlsx', 21392, 35553, 0.01, 50),
-                    (57, 'Data/train.xlsx', 21806, 35709, 0.01, 50),
-                    (58, 'Data/train.xlsx', 37112, 47873, 0.01, 50),
-                    (59, 'Data/train.xlsx', 23106, 35851, 0.01, 50),
-                    (60, 'Data/train.xlsx', 34770, 53680, 0.01, 50)
+    hyperparameter_sets = [(1, 'Data/train.xlsx', 32394, 50794, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (2, 'Data/train.xlsx', 31006, 41873, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (3, 'Data/train.xlsx', 36234, 49938, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (4, 'Data/train.xlsx', 25626, 44615, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (5, 'Data/train.xlsx', 35014, 49089, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (6, 'Data/train.xlsx', 23270, 37302, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (7, 'Data/train.xlsx', 23489, 34851, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (8, 'Data/train.xlsx', 20235, 31131, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (9, 'Data/train.xlsx', 26660, 37133, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (10, 'Data/train.xlsx', 38520, 53671, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (11, 'Data/train.xlsx', 26619, 41202, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (12, 'Data/train.xlsx', 28019, 43154, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (13, 'Data/train.xlsx', 25317, 45060, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (14, 'Data/train.xlsx', 21241, 39108, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (15, 'Data/train.xlsx', 33466, 50722, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (16, 'Data/train.xlsx', 32099, 47881, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (17, 'Data/train.xlsx', 37383, 55669, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (18, 'Data/train.xlsx', 26927, 38791, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (19, 'Data/train.xlsx', 32626, 43604, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (20, 'Data/train.xlsx', 28359, 45342, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week']),
+                    (21, 'Data/train.xlsx', 39767, 52712, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (22, 'Data/train.xlsx', 27703, 41692, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (23, 'Data/train.xlsx', 26795, 44970, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (24, 'Data/train.xlsx', 24413, 38423, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (25, 'Data/train.xlsx', 31692, 48125, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (26, 'Data/train.xlsx', 21392, 35553, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (27, 'Data/train.xlsx', 21806, 35709, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (28, 'Data/train.xlsx', 37112, 47873, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (29, 'Data/train.xlsx', 23106, 35851, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season']),
+                    (30, 'Data/train.xlsx', 34770, 53680, 0.01, 10, ["storage_level", "price", "hour", "day", 'Day_of_Week', 'Season'])
                 ]
 
     # Use multiprocessing to run experiments
