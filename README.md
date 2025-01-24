@@ -1,5 +1,4 @@
 # Project-RL
-Hello Philip and Mojgan :D
 
 ## Notes on Improving the Algorithm
 ### 1. Qualitative Analysis
@@ -9,3 +8,4 @@ Hello Philip and Mojgan :D
       epsilon (most important)
       learning rate
 - KNN
+I made some new features. 
