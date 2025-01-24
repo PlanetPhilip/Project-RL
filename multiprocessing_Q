@@ -5,6 +5,7 @@ import torch.nn as nn
 import subprocess
 import os
 import csv
+import shutil
 
 
 def extract_total_reward(output):
@@ -68,6 +69,7 @@ def run_experiment(params):
 
 
 if __name__ == '__main__':
+
 
     csv_file = 'Results/experiment_results_Q_no_reward_shaping.csv'
     file_exists = os.path.isfile(csv_file)

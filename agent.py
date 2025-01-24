@@ -77,6 +77,10 @@ class QAgent:
         self.state_choice = state_choice
         self.state_bin_size = state_bin_size
 
+        # If QTable exists, delete it and then make a new one, because QAgents need a completely new QTable for each training
+        if self.q_table_path in os.listdir('QTables'):
+            os.remove(self.q_table_path)
+
         # Add timing stats instance
         self.timing_stats = TimingStats()
 

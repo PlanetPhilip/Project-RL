@@ -2,6 +2,7 @@ from env import DataCenterEnv
 from agent import QAgent, Heuristic
 from Utils.args import parse_arguments
 import sys
+import os 
 
 TRAIN = 'Data/train.xlsx'
 VALIDATE = 'Data/validate.xlsx'
@@ -18,6 +19,8 @@ def train(agent, agent_nr, path, small_reward, large_reward, learning_rate, n_si
         state_choice=state_choice,
         state_bin_size=state_bin_size
     )
+
+
     print(f"Training agent {agent_nr}...")
     agent.train()
 
