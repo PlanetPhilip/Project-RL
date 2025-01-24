@@ -1,0 +1,139 @@
+import multiprocessing
+from agent import QAgent
+from env import DataCenterEnv
+import torch.nn as nn
+import subprocess
+import os
+import csv
+
+
+def extract_total_reward(output):
+    # Assuming the total reward is printed in the format: "Total reward: <value>"
+    explored = 0
+    total_reward = 0
+
+    for line in output.splitlines():
+        if "Explored" in line:
+            explored = float(line.split(":")[1].strip().replace("%", ""))
+        if "Total reward:" in line:
+            # Extract the numerical value and convert it to float
+            total_reward = float(line.split(":")[1].strip())
+
+    return explored, total_reward
+
+def run_experiment(params):
+
+    param_set_nr, env_path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size = params
+
+    
+    # Run training
+    subprocess.run([
+        'python', 'main.py', 
+        '--mode', 'train', 
+        '--agent', 'QAgent', 
+        '--path', env_path,
+        '--small_reward', str(small_reward),
+        '--large_reward', str(large_reward),
+        '--learning_rate', str(learning_rate),
+        '--n_simulations', str(n_simulations),
+        '--state_choice', ",".join(state_choice),
+        '--state_bin_size', ",".join(map(str, state_bin_size))
+    ])
+    
+    # Run validation
+    result = subprocess.run([
+        'python', 'main.py', 
+        '--mode', 'validate', 
+        '--agent', 'QAgent', 
+        '--path', env_path
+    ], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"Error during validation: {result.stderr}")
+        return
+
+
+
+    explored, total_reward = extract_total_reward(result.stdout)
+
+    csv_file = 'Results/experiment_results_Q.csv'
+    with open(csv_file, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([param_set_nr, small_reward, large_reward, learning_rate, n_simulations, explored, total_reward])
+        
+    print(f"Total reward: {total_reward}")
+    return total_reward
+
+
+if __name__ == '__main__':
+
+    csv_file = 'Results/experiment_results_Q_no_reward_shaping.csv'
+    file_exists = os.path.isfile(csv_file)
+    if not file_exists:
+        with open(csv_file, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Param Set', 'Small Reward', 'Large Reward', 'Learning Rate', 'Simulations', 'Explored', 'Total Reward'])
+
+    # Define different sets of hyperparameters
+
+    # How to use it?
+    # 1. fill in the following parameters in a bracket sequentially:
+        # Param Set (index No. of the parameter set)
+        # Small Reward
+        # Large Reward
+        # Learning Rate
+        # Number of Simulations (make it 10 if you want to do a quick test)
+    # 2. Set up the number of processes in the line below:
+        # with multiprocessing.Pool(processes=10) as pool:
+        # Don't make it too large otherwise each process will take too long to run
+
+    # 3. Run the code
+    # Result will be appended automatically in the csv file: Results/experiment_results_Q.csv
+
+    # Define the state name set and their bin size
+    # Make sure the bin size has the same length as the state name set
+    # Make sure that 'Day_of_Week' is the 4th element in the state name set, otherwise the reward shaping function
+    # Later will not work
+
+    state_set1 = ["storage_level", "price", "hour",  'Day_of_Week']
+    state_set2 = ["storage_level", "price", "hour", 'Day_of_Week', 'Season']
+    state_set3 = ["storage_level", "price", "hour", 'Day_of_Week', 'Season', 'Rolling_Avg_Price']
+
+
+    hyperparameter_sets = [(1, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,24,7]),
+                          (2, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5, 10, 24, 7]),
+                          (3, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,12,7]),
+                          (4, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,6,7]),
+                          (5, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,10,6,3]),
+                          (6, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,5,6,3]),
+                          (7, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [10,5,24,7]),
+                          (8, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5,5,24,7]),
+                          (9, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5,5,24,3]),
+                          (10, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set1, [5,5,12,3]),
+
+                          (11, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,24,7,4]),
+                          (12, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5, 10, 24,7,4]),
+                          (13, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,12,7,4]),
+                          (14, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,6,7,4]),
+                          (15, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,10,6,3,4]),
+                          (16, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,5,6,3,4]),
+                          (17, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [10,5,24,7,4]),
+                          (18, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5,5,24,7,4]),
+                          (19, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5,5,24,3,4]),
+                          (20, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set2, [5,5,12,3,4]),
+
+                          (21, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,24,7,4,3]),
+                          (22, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5, 10, 24,7,4,3]),
+                          (23, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,12,7,4,3]),
+                          (24, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,6,7,4,3]),
+                          (25, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,6,3,4,3]),
+                          (26, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,5,6,3,4,3]),
+                          (27, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,5,24,7,4,3]),
+                          (28, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,24,7,4,3]),
+                          (29, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,24,3,4,3]),
+                          (30, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,12,3,4,3]),
+                ]
+
+    # Use multiprocessing to run experiments
+    with multiprocessing.Pool(processes=10) as pool:
+        pool.map(run_experiment, hyperparameter_sets)
