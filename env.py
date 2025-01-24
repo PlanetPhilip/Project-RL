@@ -14,12 +14,16 @@ class DataCenterEnv(gym.Env):
         self.start_date = self.test_data['PRICES'].iloc[0]
         self.start_date_day = self.start_date.day_name()
 
+        self.start_date = self.test_data['PRICES'].iloc[0]
+        self.start_date_day = self.start_date.day_name()
+
 
         self.daily_energy_demand = 120  # MWh
         self.max_power_rate = 10  # MW
         self.storage_level = 0
         self.hour = 1
         self.day = 1
+        # self.start_date = self.test_data['DATE'][0]
         # self.start_date = self.test_data['DATE'][0]
 
     def step(self, action):
