@@ -10,6 +10,7 @@ from collections import defaultdict
 class TimingStats:
     def __init__(self):
         self.function_times = defaultdict(list)
+        self.agent_nr = None  # Will be set when instantiated by an agent
         
     def add_timing(self, func_name, execution_time):
         self.function_times[func_name].append(execution_time)
@@ -28,7 +29,8 @@ class TimingStats:
     
     def print_stats(self):
         stats = self.get_stats()
-        print("\nFunction Timing Statistics:")
+        agent_str = f" for Agent {self.agent_nr}" if self.agent_nr is not None else ""
+        print(f"\nFunction Timing Statistics{agent_str}:")
         print("-" * 80)
         print(f"{'Function Name':<30} {'Calls':<10} {'Total(s)':<12} {'Avg(ms)':<12} {'Min(ms)':<12} {'Max(ms)':<12}")
         print("-" * 80)
@@ -81,13 +83,13 @@ class QAgent:
         if self.q_table_path in os.listdir('QTables'):
             os.remove(self.q_table_path)
 
+        # Load transformed dataset
+        self.transformed_data = pd.read_excel('transformed_dataset.xlsx')
+
+
         # Add timing stats instance
         self.timing_stats = TimingStats()
-
-        # Calculate initial average price
-        hour_columns = [col for col in env.test_data.columns if 'Hour' in col]
-        avg_price = env.test_data[hour_columns].mean(axis=1)
-        rolling_avg = avg_price.rolling(window=365, min_periods=1).mean()
+        self.timing_stats.agent_nr = agent_nr  # Set the agent number
 
         # Discretize Action Space
         self.action_space = gym.spaces.Discrete(3)
@@ -114,8 +116,6 @@ class QAgent:
             'hour': {'low': 1, 'high': 25, 'bin_size': custom_bin_size['hour']},
             'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': custom_bin_size['day']},
             'Season': {'low': 0, 'high': 3, 'bin_size': custom_bin_size['Season']},
-            'Avg_Price': {'low': np.min(avg_price), 'high': np.max(avg_price), 'bin_size': custom_bin_size['Avg_Price']},
-            'Rolling_Avg_Price': {'low': np.min(rolling_avg), 'high': np.max(rolling_avg), 'bin_size': custom_bin_size['Rolling_Avg_Price']},
             'Day_of_Week': {'low': 0, 'high': 6, 'bin_size': custom_bin_size['Day_of_Week']}
         }
         
@@ -306,7 +306,7 @@ class QAgent:
         print(self.name)
         print("Start evaluating:")
         print(f"Q-table shape: {self.Qtable.shape}")
-        print(f"Q-table: {self.Qtable}")
+        # print(f"Q-table: {self.Qtable}")
         print(f"Bins: {self.bins}")
 
         # Load Q-table
@@ -325,10 +325,10 @@ class QAgent:
         aggregate_reward = 0
 
         # Create a txt file to store the transition profile
-        with open('Results/transition_profile_no_rewardshaping.txt', 'w') as f:
+        with open(f'Results/Agent_{self.agent_nr}_no_rewardshaping.txt', 'w') as f:
             f.write("Transition Profile during evaluationwithout reward shaping:\n")
             f.write(f"Q-table shape: {self.Qtable.shape}\n")
-            f.write(f"Q-table: {self.Qtable}\n")
+            # f.write(f"Q-table: {self.Qtable}\n")
             f.write(f"State choice: {self.state_choice}\n")
             f.write(f"State bin size: {self.state_bin_size}\n")
             f.write(f"Bins length: {len(self.bins)}\n")
@@ -342,13 +342,15 @@ class QAgent:
         # Rollout
         terminated = False
         while not terminated:
+            with open(f'Results/Agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
+                f.write(f"State: {state},")
             state = self.discretize_state(state)
             action = self.act(state)
             next_state, reward, terminated = self.env.step(action)
             state = next_state
             aggregate_reward += reward
-            with open('Results/transition_profile_no_rewardshaping.txt', 'a') as f:
-                f.write(f"State: {state}, Action: {action}, Reward: {reward}, Next state: {next_state}\n")
+            with open(f'Results/Agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
+                f.write(f" Action: {action}, Reward: {reward}, Next state: {next_state}\n")
 
             if print_transitions:
                 print("Action:", action)
@@ -494,7 +496,7 @@ class Heuristic(QAgent):
         print(f"Agent No.: {self.agent_nr}")
         print("Q-table path: ", self.q_table_path)
         print(f"Q-table shape: {self.Qtable.shape}")
-        print(f"Q-table: {self.Qtable}")
+        # print(f"Q-table: {self.Qtable}")
         print(f"Bins: {self.bins}")
         
         # Load Q-table
@@ -516,7 +518,6 @@ class Heuristic(QAgent):
         with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'w') as f:
             f.write("Transition Profile during evaluationwithout reward shaping:\n")
             f.write(f"Q-table shape: {self.Qtable.shape}\n")
-            f.write(f"Q-table: {self.Qtable}\n")
             f.write(f"State choice: {self.state_choice}\n")
             f.write(f"State bin size: {self.state_bin_size}\n")
             f.write(f"Bins length: {len(self.bins)}\n")
@@ -530,17 +531,18 @@ class Heuristic(QAgent):
         # Rollout
         terminated = False
         while not terminated:
+            with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
+                f.write(f"State: {state},")
             state = self.discretize_state(state)
-            current_state = state.copy()
             action = self.act(state)
             next_state, reward, terminated = self.env.step(action)
             state = next_state
             aggregate_reward += reward
             with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
-                f.write(f"State: {current_state}, Action: {action}, Reward: {reward}, Next state: {next_state}\n")
+                f.write(f" Action: {action}, Reward: {reward}, Next state: {next_state}\n")
 
             if print_transitions:
-                print("State:", current_state)
+                print("State:", state)
                 print("Action:", action)
                 print("Next state:", next_state)
                 print("Reward:", reward)
@@ -580,7 +582,7 @@ if __name__ == '__main__':
                     '--small_reward', '10000', 
                     '--large_reward', '30000', 
                     '--learning_rate', '0.01', 
-                    '--n_simulations', '10', 
+                    '--n_simulations', '3', 
                     '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week"]),
                     '--state_bin_size', ",".join(map(str, [10, 10, 24, 7]))
                     ])
