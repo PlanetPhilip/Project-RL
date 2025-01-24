@@ -146,14 +146,15 @@ class QAgent:
         state = self.feature_engineering(state)
         state = np.array(state)  # Convert to numpy array once
         
-        discretized_state = []
+        discretized_state = []  # Initialize as an empty list
         
         for i in range(len(state)):
             # Ensure the value is within the bin range
             val = np.clip(state[i], self.bins[i][0], self.bins[i][-1])
             bin_idx = np.digitize(val, self.bins[i], right=True) - 1
             # Ensure the index is within bounds
-            discretized_state[i] = np.clip(bin_idx, 0, len(self.bins[i]) - 2)
+            discretized_idx = np.clip(bin_idx, 0, len(self.bins[i]) - 2)
+            discretized_state.append(discretized_idx)  # Append the value instead of assigning by index
         
         return discretized_state
 
@@ -588,16 +589,17 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
+    agent_nr = str(11)
     subprocess.run(['python', 'main.py', 
                     '--mode', 'train', 
                     '--agent', 'QAgent', 
-                    '--agent_nr', '1',
+                    '--agent_nr', agent_nr,
                     '--small_reward', '10000', 
                     '--large_reward', '30000', 
                     '--learning_rate', '0.01', 
-                    '--n_simulations', '10', 
-                    '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week"]),
-                    '--state_bin_size', ",".join(map(str, [10, 10, 24, 7]))
+                    '--n_simulations', '3', 
+                    '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week", "Season"]),
+                    '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
                     ])
     
-    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', '1'])
+    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', agent_nr])
