@@ -6,6 +6,7 @@ import pandas as pd
 import time
 import functools
 from collections import defaultdict
+from sklearn.preprocessing import LabelEncoder
 
 class TimingStats:
     def __init__(self):
@@ -143,14 +144,17 @@ class QAgent:
         # print(f"State before discretization: {state}")
 
         state = self.feature_engineering(state)
+        state = np.array(state)  # Convert to numpy array once
+        
         discretized_state = []
+        
         for i in range(len(state)):
             # Ensure the value is within the bin range
             val = np.clip(state[i], self.bins[i][0], self.bins[i][-1])
             bin_idx = np.digitize(val, self.bins[i], right=True) - 1
             # Ensure the index is within bounds
-            bin_idx = np.clip(bin_idx, 0, len(self.bins[i]) - 2)
-            discretized_state.append(bin_idx)
+            discretized_state[i] = np.clip(bin_idx, 0, len(self.bins[i]) - 2)
+        
         return discretized_state
 
     @timing_decorator
@@ -161,7 +165,16 @@ class QAgent:
         """
         # Get Season and Day_of_Week from transformed dataset
         day_index = min(self.env.day, len(self.transformed_data) - 1)
-        Season = self.transformed_data['Season'].iloc[day_index]
+        # Initialize LabelEncoder
+        label_encoder = LabelEncoder()
+        
+        # Fit the encoder on the unique seasons in the dataset
+        unique_seasons = self.transformed_data['Season'].unique()
+        label_encoder.fit(unique_seasons)
+        
+        # Transform the current season into an integer
+        Season = label_encoder.transform([self.transformed_data['Season'].iloc[day_index]])[0]
+
         Day_of_Week = self.transformed_data['Day_of_Week'].iloc[day_index]
 
         # Create a dictionary of all possible features
@@ -582,7 +595,7 @@ if __name__ == '__main__':
                     '--small_reward', '10000', 
                     '--large_reward', '30000', 
                     '--learning_rate', '0.01', 
-                    '--n_simulations', '3', 
+                    '--n_simulations', '10', 
                     '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week"]),
                     '--state_bin_size', ",".join(map(str, [10, 10, 24, 7]))
                     ])

@@ -1,0 +1,32 @@
+Transition Profile during evaluationwithout reward shaping:
+Q-table shape: (10, 10, 4, 7, 3)
+State choice: ['storage_level', 'price', 'hour', 'Day_of_Week']
+State bin size: [10, 10, 6, 7]
+Bins length: 4
+Bins: [array([  0.,  29.,  58.,  87., 116., 145., 174., 203., 232., 261., 290.]), array([1.000000e-02, 2.500090e+02, 5.000080e+02, 7.500070e+02,
+       1.000006e+03, 1.250005e+03, 1.500004e+03, 1.750003e+03,
+       2.000002e+03, 2.250001e+03, 2.500000e+03]), array([ 1.,  5.,  9., 13., 17., 21., 25.]), array([0.        , 0.85714286, 1.71428571, 2.57142857, 3.42857143,
+       4.28571429, 5.14285714, 6.        ])]
+Discount rate: 0.95
+Small reward: 50000
+Large reward: 100000
+Learning rate: 0.05
+N simulations: 10
+State: [ 0.   24.31  1.    1.  ], Action: 2, Reward: -243.1, Next state: [10.   24.31  2.    1.  ]
+State: [10.   24.31  2.    1.  ], Action: 2, Reward: -243.1, Next state: [20.   21.71  3.    1.  ]
+State: [20.   21.71  3.    1.  ], Action: 2, Reward: -217.10000000000002, Next state: [30.    8.42  4.    1.  ]
+State: [30.    8.42  4.    1.  ], Action: 2, Reward: -84.2, Next state: [4.e+01 1.e-02 5.e+00 1.e+00]
+State: [4.e+01 1.e-02 5.e+00 1.e+00], Action: 2, Reward: -0.1, Next state: [5.e+01 1.e-02 6.e+00 1.e+00]
+State: [5.e+01 1.e-02 6.e+00 1.e+00], Action: 2, Reward: -0.1, Next state: [6.e+01 2.e-02 7.e+00 1.e+00]
+State: [6.e+01 2.e-02 7.e+00 1.e+00], Action: 1, Reward: -0.2, Next state: [7.e+01 1.e-02 8.e+00 1.e+00]
+State: [7.e+01 1.e-02 8.e+00 1.e+00], Action: 1, Reward: -0.1, Next state: [8.e+01 1.e-02 9.e+00 1.e+00]
+State: [8.e+01 1.e-02 9.e+00 1.e+00], Action: 1, Reward: -0.1, Next state: [90.    6.31 10.    1.  ]
+State: [90.    6.31 10.    1.  ], Action: 2, Reward: -63.099999999999994, Next state: [100.     7.81  11.     1.  ]
+State: [100.     7.81  11.     1.  ], Action: 2, Reward: -78.1, Next state: [110.     9.31  12.     1.  ]
+State: [110.     9.31  12.     1.  ], Action: 2, Reward: -93.10000000000001, Next state: [120.   21.7  13.    1. ]
+State: [120.   21.7  13.    1. ], Action: 0, Reward: -0.0, Next state: [120.    14.01  14.     1.  ]
+State: [120.    14.01  14.     1.  ], Action: 0, Reward: -0.0, Next state: [120.  15.  15.   1.]
+State: [120.  15.  15.   1.], Action: 0, Reward: -0.0, Next state: [120.  10.  16.   1.]
+State: [120.  10.  16.   1.], Action: 0, Reward: -0.0, Next state: [120.     8.17  17.     1.  ]
+State: [120.     8.17  17.     1.  ], Action: 0, Reward: -0.0, Next state: [120.    27.77  18.     1.  ]
+State: [120.    27.77  18.     1.  ],

@@ -18,5 +18,6 @@ pandas~=2.2.3
 imageio[ffmpeg]
 imageio[pyav]
 openpyxl
+scikit-learn
 
 numpy~=1.24.4
