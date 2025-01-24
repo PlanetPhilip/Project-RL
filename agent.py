@@ -54,6 +54,7 @@ def timing_decorator(func):
 class QAgent:
 
     def __init__(self, 
+                 agent_nr,
                  env, 
                  discount_rate=0.95, 
                  small_reward=50000, 
@@ -65,15 +66,20 @@ class QAgent:
                  ):
         
         self.name = "QAgent"
+        self.agent_nr = agent_nr
         self.env = env
         self.discount_rate = discount_rate
-        self.q_table_path = 'Data/q_table.npy'
+        self.q_table_path = f'QTables/q_table_{agent_nr}.npy'
         self.small_reward = small_reward
         self.large_reward = large_reward
         self.learning_rate = learning_rate
         self.n_simulations = n_simulations
         self.state_choice = state_choice
         self.state_bin_size = state_bin_size
+
+        # If QTable exists, delete it and then make a new one, because QAgents need a completely new QTable for each training
+        if self.q_table_path in os.listdir('QTables'):
+            os.remove(self.q_table_path)
 
         # Add timing stats instance
         self.timing_stats = TimingStats()
@@ -299,13 +305,13 @@ class QAgent:
             # Update epsilon
             epsilon = epsilon * decay_rate
 
-            # Save states in a txt file to observe what information is stored in the state
-            if 'Data/states.txt' not in os.listdir("Data"):
-                mode = 'w'
-            else:
-                mode = 'a'
-            with open('Data/states.txt', mode) as f:
-                f.write(str(state) + '\n')
+            # # Save states in a txt file to observe what information is stored in the state
+            # if 'Data/states.txt' not in os.listdir("Data"):
+            #     mode = 'w'
+            # else:
+            #     mode = 'a'
+            # with open('Data/states.txt', mode) as f:
+            #     f.write(str(state) + '\n')
 
         # Save Q-table
         np.save(self.q_table_path, self.Qtable)
@@ -321,6 +327,8 @@ class QAgent:
         start_time = time.time()
         print(self.name)
         print("Start evaluating:")
+        print(f"Agent No.: {self.agent_nr}")
+        print("Q-table path: ", self.q_table_path)
         print(f"Q-table shape: {self.Qtable.shape}")
         print(f"Q-table: {self.Qtable}")
         print(f"Bins: {self.bins}")
@@ -331,7 +339,7 @@ class QAgent:
                 self.Qtable = np.load(self.q_table_path)
                 print(f"Q-table shape: {self.Qtable.shape}")
             except Exception as e:
-                print(f"Error loading Q-table: {e}")
+                print(f"Error loading Q-table for Agent{self.agent_nr}: {e}")
                 return
             
         print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
@@ -341,7 +349,7 @@ class QAgent:
         aggregate_reward = 0
 
         # Create a txt file to store the transition profile 
-        with open('Results/transition_profile_no_rewardshaping.txt', 'w') as f:
+        with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'w') as f:
             f.write("Transition Profile during evaluationwithout reward shaping:\n")
             f.write(f"Q-table shape: {self.Qtable.shape}\n")
             f.write(f"Q-table: {self.Qtable}\n")
@@ -359,14 +367,16 @@ class QAgent:
         terminated = False
         while not terminated:
             state = self.discretize_state(state)
+            current_state = state.copy()
             action = self.act(state)
             next_state, reward, terminated = self.env.step(action)
             state = next_state
             aggregate_reward += reward
-            with open('Results/transition_profile_no_rewardshaping.txt', 'a') as f:
-                f.write(f"State: {state}, Action: {action}, Reward: {reward}, Next state: {next_state}\n")
+            with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
+                f.write(f"State: {current_state}, Action: {action}, Reward: {reward}, Next state: {next_state}\n")
 
             if print_transitions:
+                print("State:", current_state)
                 print("Action:", action)
                 print("Next state:", next_state)
                 print("Reward:", reward)
@@ -402,6 +412,7 @@ if __name__ == '__main__':
     subprocess.run(['python', 'main.py', 
                     '--mode', 'train', 
                     '--agent', 'QAgent', 
+                    '--agent_nr', '1',
                     '--small_reward', '10000', 
                     '--large_reward', '30000', 
                     '--learning_rate', '0.01', 
@@ -410,4 +421,4 @@ if __name__ == '__main__':
                     '--state_bin_size', ",".join(map(str, [10, 10, 24, 7]))
                     ])
     
-    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent'])
+    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', '1'])
