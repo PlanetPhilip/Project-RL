@@ -1,0 +1,16 @@
+Agent info during optimization:
+Q-table shape: (3, 8, 8, 5, 3)
+State choice: ['storage_level', 'price', 'hour', 'Day_of_Week']
+State bin size: [np.int64(3), np.int64(8), np.int64(8), np.int64(5)]
+Bins length: 4
+Bins: [array([  0.        ,  96.66666667, 193.33333333, 290.        ]), array([1.00000000e-02, 3.12508750e+02, 6.25007500e+02, 9.37506250e+02,
+       1.25000500e+03, 1.56250375e+03, 1.87500250e+03, 2.18750125e+03,
+       2.50000000e+03]), array([ 1.,  4.,  7., 10., 13., 16., 19., 22., 25.]), array([0. , 1.2, 2.4, 3.6, 4.8, 6. ])]
+Discount rate: 0.971712095389104
+Small reward: 848.9138242660841
+Large reward: 14434.590423297466
+Learning rate: 0.07079547592468674
+N simulations: 5
+Total reward: -7336817.699999999
+
+

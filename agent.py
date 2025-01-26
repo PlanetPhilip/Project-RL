@@ -65,7 +65,8 @@ class QAgent:
                  learning_rate=0.05, 
                  n_simulations=10,
                  state_choice=["storage_level", "price", "hour", "Day_of_Week"],
-                 state_bin_size=[5,5,6,7]
+                 state_bin_size=[5,5,6,7],
+                 optimization_mode = False
                  ):
         
         self.name = "QAgent"
@@ -79,6 +80,7 @@ class QAgent:
         self.n_simulations = n_simulations
         self.state_choice = state_choice
         self.state_bin_size = state_bin_size
+        self.optimization_mode = optimization_mode
 
         # Load transformed dataset
         self.transformed_data = pd.read_excel('transformed_dataset.xlsx')
@@ -378,6 +380,31 @@ class QAgent:
         evaluation_time = time.time() - start_time
         print(f"\nTotal evaluation time: {evaluation_time:.2f} seconds")
         self.timing_stats.print_stats()
+
+        # If agent is in optimization mode, record the hyperparameters and the total reward during each optimization run
+
+        if self.optimization_mode:
+            
+            if 'Results/Agent_{self.agent_nr}_optimization_results.txt' not in os.listdir('Results'):
+                file_mode = 'w'
+            else:
+                file_mode = 'a' 
+
+            with open(f'Results/Agent_{self.agent_nr}_optimization_results.txt', file_mode) as f:
+                f.write("Agent info during optimization:\n")
+                f.write(f"Q-table shape: {self.Qtable.shape}\n")
+                # f.write(f"Q-table: {self.Qtable}\n")
+                f.write(f"State choice: {self.state_choice}\n")
+                f.write(f"State bin size: {self.state_bin_size}\n")
+                f.write(f"Bins length: {len(self.bins)}\n")
+                f.write(f"Bins: {self.bins}\n")
+                f.write(f"Discount rate: {self.discount_rate}\n")
+                f.write(f"Small reward: {self.small_reward}\n")
+                f.write(f"Large reward: {self.large_reward}\n")
+                f.write(f"Learning rate: {self.learning_rate}\n")
+                f.write(f"N simulations: {self.n_simulations}\n")
+                f.write(f"Total reward: {aggregate_reward}\n")
+                f.write(f"\n\n")
 
         return aggregate_reward
 
