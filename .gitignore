@@ -1,4 +1,7 @@
 /venv-project-RL
-/Qtables/*
+# Save the existing QTables and Results on local computer 
+# to avoid pushing too much data to github
+/QTables_local
+/Results_local
 
 
