@@ -64,8 +64,8 @@ class QAgent:
                  large_reward=100000, 
                  learning_rate=0.05, 
                  n_simulations=10,
-                 state_choice=["storage_level", "price", "hour", "Day_of_Week"],
-                 state_bin_size=[10, 10, 6, 7]
+                 state_choice=["storage_level", "price", "hour", "Day_of_Week", "Season"],
+                 state_bin_size=[10,5,6,7,4]
                  ):
         
         self.name = "QAgent"
@@ -81,8 +81,8 @@ class QAgent:
         self.state_bin_size = state_bin_size
 
         # If QTable exists, delete it and then make a new one, because QAgents need a completely new QTable for each training
-        if self.q_table_path in os.listdir('QTables'):
-            os.remove(self.q_table_path)
+        # if self.q_table_path in os.listdir('QTables'):
+        #     os.remove(self.q_table_path)
 
         # Load transformed dataset
         self.transformed_data = pd.read_excel('transformed_dataset.xlsx')
@@ -216,39 +216,38 @@ class QAgent:
 
         # Consider the commented out hours as ideal buying hours later,
         # And shaping the price as well on an average basis.
-        return 0
 
-        # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
-        # # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
+        ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
+        # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
 
-        # ideal_buying_day = [4,5]
-        # ideal_selling_hour = [10,11,12,13,14, 19, 20]
+        ideal_buying_day = [4,5]
+        ideal_selling_hour = [10,11,12,13,14, 19, 20]
 
-        # # ideal_selling_hour = [11,12,13]
-        # ideal_selling_day = [0,2]
+        # ideal_selling_hour = [11,12,13]
+        ideal_selling_day = [0,2]
 
-        # state_day_of_week = state[3]
-        # state_hour = state[2]
+        state_day_of_week = state[3]
+        state_hour = state[2]
 
-        # additional_reward = 0
+        additional_reward = 0
 
-        # # Give large reward if agent buys on ideal buying hours
-        # if action == 2 and state_hour in ideal_buying_hour:
-        #     additional_reward += self.large_reward
+        # Give large reward if agent buys on ideal buying hours
+        if action == 2 and state_hour in ideal_buying_hour:
+            additional_reward += self.large_reward
 
-        # # Give small reward if agent buys on ideal buying days
-        # if action == 2 and state_day_of_week in ideal_buying_day:
-        #     additional_reward += self.small_reward
+        # Give small reward if agent buys on ideal buying days
+        if action == 2 and state_day_of_week in ideal_buying_day:
+            additional_reward += self.small_reward
 
-        # # Give large reward if agent sells on ideal selling hours
-        # if action == 0 and state_hour in ideal_selling_hour:
-        #     additional_reward += self.large_reward
+        # Give large reward if agent sells on ideal selling hours
+        if action == 0 and state_hour in ideal_selling_hour:
+            additional_reward += self.large_reward
 
-        # # Give small reward if agent sells on ideal selling days
-        # if action == 0 and state_day_of_week in ideal_selling_day:
-        #     additional_reward += self.small_reward
+        # Give small reward if agent sells on ideal selling days
+        if action == 0 and state_day_of_week in ideal_selling_day:
+            additional_reward += self.small_reward
 
-        # return additional_reward
+        return additional_reward
 
     @timing_decorator
     def update_qtable(self, state, action, next_state, reward):
@@ -276,195 +275,12 @@ class QAgent:
         start_time = time.time()
         # Initialize Epsilon
         epsilon = 1
-        decay_rate = (0.05 / 1) ** (1 / (self.n_simulations - 1))
 
-        for i in range(self.n_simulations):
-            print(f"Simulation: {i + 1}/{self.n_simulations}")
+        # # Decay rate version 1
+        # decay_rate = (0.05 / 1) ** (1 / (self.n_simulations - 1))
 
-            # Initialize
-            environment = self.env
-            state = environment.reset()
-
-            # Rollout
-            terminated = False
-            while not terminated:
-                state = self.discretize_state(state)
-                action = self.act(state, epsilon)
-                next_state, reward, terminated = environment.step(action)
-                self.update_qtable(state, action, next_state, reward)
-                state = next_state
-
-            # Update epsilon
-            epsilon = epsilon * decay_rate
-
-            # Save states in a txt file to observe what information is stored in the state
-            if 'Data/states.txt' not in os.listdir("Data"):
-                mode = 'w'
-            else:
-                mode = 'a'
-            with open('Data/states.txt', mode) as f:
-                f.write(str(state) + '\n')
-
-        # Save Q-table
-        np.save(self.q_table_path, self.Qtable)
-        print(f'\nQtable saved to {self.q_table_path}')
-
-        # Print timing statistics at the end of training
-        training_time = time.time() - start_time
-        print(f"\nTotal training time: {training_time:.2f} seconds")
-        self.timing_stats.print_stats()
-
-    @timing_decorator
-    def evaluate(self, print_transitions=False):
-        start_time = time.time()
-        print(self.name)
-        print("Start evaluating:")
-        print(f"Q-table shape: {self.Qtable.shape}")
-        # print(f"Q-table: {self.Qtable}")
-        print(f"Bins: {self.bins}")
-
-        # Load Q-table
-        if self.name != 'Heuristic':
-            try:
-                self.Qtable = np.load(self.q_table_path)
-                print(f"Q-table shape: {self.Qtable.shape}")
-            except Exception as e:
-                print(f"Error loading Q-table: {e}")
-                return
-
-        print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
-
-        # Initialize
-        state = self.env.reset()
-        aggregate_reward = 0
-
-        # Create a txt file to store the transition profile
-        with open(f'Results/Agent_{self.agent_nr}_no_rewardshaping.txt', 'w') as f:
-            f.write("Transition Profile during evaluationwithout reward shaping:\n")
-            f.write(f"Q-table shape: {self.Qtable.shape}\n")
-            # f.write(f"Q-table: {self.Qtable}\n")
-            f.write(f"State choice: {self.state_choice}\n")
-            f.write(f"State bin size: {self.state_bin_size}\n")
-            f.write(f"Bins length: {len(self.bins)}\n")
-            f.write(f"Bins: {self.bins}\n")
-            f.write(f"Discount rate: {self.discount_rate}\n")
-            f.write(f"Small reward: {self.small_reward}\n")
-            f.write(f"Large reward: {self.large_reward}\n")
-            f.write(f"Learning rate: {self.learning_rate}\n")
-            f.write(f"N simulations: {self.n_simulations}\n")
-
-        # Rollout
-        terminated = False
-        while not terminated:
-            with open(f'Results/Agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
-                f.write(f"State: {state},")
-            state = self.discretize_state(state)
-            action = self.act(state)
-            next_state, reward, terminated = self.env.step(action)
-            state = next_state
-            aggregate_reward += reward
-            with open(f'Results/Agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
-                f.write(f" Action: {action}, Reward: {reward}, Next state: {next_state}\n")
-
-            if print_transitions:
-                print("Action:", action)
-                print("Next state:", next_state)
-                print("Reward:", reward)
-
-        print(f'Total reward: {round(aggregate_reward)}\n')
-
-        # Print timing statistics at the end of evaluation
-        evaluation_time = time.time() - start_time
-        print(f"\nTotal evaluation time: {evaluation_time:.2f} seconds")
-        self.timing_stats.print_stats()
-
-
-class Heuristic(QAgent):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.name = 'Heuristic'
-
-    def train(self, a=0, b=0, c=0):
-        print("You don't need to train a heuristic!")
-
-    def act(self, state, epsilon=0):
-        # Heuristic: Picks Action based on time of day
-        if state[2] in [1, 2, 3, 4, 5, 6, 7, 8, 17, 22, 23, 24]:
-            action = 2
-        else:
-            action = 1
-        return action
-
-    @timing_decorator
-    def potential_function(self, state, action):
-        """
-        Potential function for shaping the reward function.
-        Add a small reward if agent buys on Friday and Saturday.
-        Add a slightly larger reward if agent buys in the morning.
-        Add a small reward if agent sells when it is expeisnve.
-        """
-
-        # Consider the commented out hours as ideal buying hours later,
-        # And shaping the price as well on an average basis.
-        return 0
-    
-        # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
-        # # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
-
-        # ideal_buying_day = [4,5]
-        # ideal_selling_hour = [10,11,12,13,14, 19, 20]
-
-        # # ideal_selling_hour = [11,12,13]
-        # ideal_selling_day = [0,2]
-
-        # state_day_of_week = state[3]
-        # state_hour = state[2]
-
-        # additional_reward = 0
-
-        # # Give large reward if agent buys on ideal buying hours
-        # if action == 2 and state_hour in ideal_buying_hour:
-        #     additional_reward += self.large_reward
-
-        # # Give small reward if agent buys on ideal buying days
-        # if action == 2 and state_day_of_week in ideal_buying_day:
-        #     additional_reward += self.small_reward
-
-        # # Give large reward if agent sells on ideal selling hours
-        # if action == 0 and state_hour in ideal_selling_hour:
-        #     additional_reward += self.large_reward
-
-        # # Give small reward if agent sells on ideal selling days
-        # if action == 0 and state_day_of_week in ideal_selling_day:
-        #     additional_reward += self.small_reward
-
-        # return additional_reward
-
-    @timing_decorator
-    def update_qtable(self, state, action, next_state, reward):
-        # # Debugging: Print the next state before accessing
-        # print(f"Next State in update_qtable: {next_state}")
-
-        # Ensure next_state is discretized
-        next_state = self.discretize_state(next_state)
-
-        # # Debugging: Print the discretized next state
-        # print(f"Discretized Next State: {next_state}")
-
-        # Shape Reward   r'(s,a s') = r(s,a,s) + (gamma * P(s') - P(s))
-        shaped_reward = (reward + ((self.discount_rate * self.potential_function(next_state, action)) - self.potential_function(state, action)))
-
-        # Update Qtable
-        Q_target = shaped_reward + self.discount_rate * np.max(self.Qtable[tuple(next_state)])
-        delta = self.learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
-        self.Qtable[tuple(state) + (action,)] = self.Qtable[tuple(state) + (action,)] + delta
-
-    @timing_decorator
-    def train(self):
-        start_time = time.time()
-        # Initialize Epsilon
-        epsilon = 1
-        decay_rate = (0.05 / 1) ** (1 / (self.n_simulations - 1))
+        # Decay rate version 2
+        decay_rate = ((0.05 / 1) ** (1 / (self.n_simulations - 1))) / 2
 
         for i in range(self.n_simulations):
             print(f"Simulation: {i + 1}/{self.n_simulations}")
@@ -507,31 +323,30 @@ class Heuristic(QAgent):
         start_time = time.time()
         print(self.name)
         print("Start evaluating:")
-        print(f"Agent No.: {self.agent_nr}")
-        print("Q-table path: ", self.q_table_path)
         print(f"Q-table shape: {self.Qtable.shape}")
         # print(f"Q-table: {self.Qtable}")
         print(f"Bins: {self.bins}")
-        
+
         # Load Q-table
         if self.name != 'Heuristic':
             try:
                 self.Qtable = np.load(self.q_table_path)
                 print(f"Q-table shape: {self.Qtable.shape}")
             except Exception as e:
-                print(f"Error loading Q-table for Agent{self.agent_nr}: {e}")
+                print(f"Error loading Q-table: {e}")
                 return
-            
+
         print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
-        
+
         # Initialize
         state = self.env.reset()
         aggregate_reward = 0
 
-        # Create a txt file to store the transition profile 
-        with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'w') as f:
-            f.write("Transition Profile during evaluationwithout reward shaping:\n")
+        # Create a txt file to store the transition profile
+        with open(f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt', 'w') as f:
+            f.write("Transition Profile during evaluation with reward shaping:\n")
             f.write(f"Q-table shape: {self.Qtable.shape}\n")
+            # f.write(f"Q-table: {self.Qtable}\n")
             f.write(f"State choice: {self.state_choice}\n")
             f.write(f"State bin size: {self.state_bin_size}\n")
             f.write(f"Bins length: {len(self.bins)}\n")
@@ -545,22 +360,20 @@ class Heuristic(QAgent):
         # Rollout
         terminated = False
         while not terminated:
-            with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
+            with open(f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt', 'a') as f:
                 f.write(f"State: {state},")
             state = self.discretize_state(state)
             action = self.act(state)
             next_state, reward, terminated = self.env.step(action)
             state = next_state
             aggregate_reward += reward
-            with open(f'Results/agent_{self.agent_nr}_no_rewardshaping.txt', 'a') as f:
+            with open(f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt', 'a') as f:
                 f.write(f" Action: {action}, Reward: {reward}, Next state: {next_state}\n")
 
             if print_transitions:
-                print("State:", state)
                 print("Action:", action)
                 print("Next state:", next_state)
                 print("Reward:", reward)
-                
 
         print(f'Total reward: {round(aggregate_reward)}\n')
 
@@ -589,17 +402,17 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    agent_nr = str(11)
-    subprocess.run(['python', 'main.py', 
-                    '--mode', 'train', 
-                    '--agent', 'QAgent', 
-                    '--agent_nr', agent_nr,
-                    '--small_reward', '10000', 
-                    '--large_reward', '30000', 
-                    '--learning_rate', '0.01', 
-                    '--n_simulations', '3', 
-                    '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week", "Season"]),
-                    '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
-                    ])
+    agent_nr = str(12)
+    # subprocess.run(['python', 'main.py', 
+    #                 '--mode', 'train', 
+    #                 '--agent', 'QAgent', 
+    #                 '--agent_nr', agent_nr,
+    #                 '--small_reward', '10000', 
+    #                 '--large_reward', '30000', 
+    #                 '--learning_rate', '0.01', 
+    #                 '--n_simulations', '3', 
+    #                 '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week", "Season"]),
+    #                 '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
+    #                 ])
     
     subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', agent_nr])

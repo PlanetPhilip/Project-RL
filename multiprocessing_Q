@@ -60,7 +60,7 @@ def run_experiment(params):
 
     explored, total_reward = extract_total_reward(result.stdout)
     
-    csv_file = 'Results/experiment_results_Q_no_reward_shaping.csv'
+    csv_file = 'Results/experiment_results_with_reward_shaping.csv'
     with open(csv_file, 'a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([agent_nr, small_reward, large_reward, learning_rate, n_simulations, explored, total_reward])
@@ -71,7 +71,7 @@ def run_experiment(params):
 if __name__ == '__main__':
 
 
-    csv_file = 'Results/experiment_results_Q_no_reward_shaping.csv'
+    csv_file = 'Results/experiment_results_with_reward_shaping.csv'
     file_exists = os.path.isfile(csv_file)
     if not file_exists:
         with open(csv_file, 'w', newline='') as file:
@@ -103,39 +103,50 @@ if __name__ == '__main__':
     state_set2 = ["storage_level", "price", "hour", 'Day_of_Week', 'Season']
 
     hyperparameter_sets = [
-                          (1, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,24,7]),
-                          (2, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,7]),
-                          (3, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7]),
-                          (4, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,7]),
-                          (5, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,3]),
-                          (6, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,5,6,3]),
-                          (7, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7]),
-                          (8, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,3]),
-
-                          (9, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,24,7,4]),
-                          (10, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10, 10, 6,7,4]),
-                          (11, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,10,6,7,4]),
-                          (12, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,5,6,7,4]),
-                          (13, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,7,4]),
-                          (14, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4]),
-                          (15, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,6,3,4]),
-                          (16, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4]),
-
-                        #   (19, 'Data/train.xlsx', 32394, 50794, 0.01, 10, state_set2, [5,5,24,3,4]),
-                        #   (20, 'Data/train.xlsx', 32394, 50794, 0.01, 10, state_set2, [5,5,12,3,4]),
-
-                        #   (21, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,24,7,4,3]),
-                        #   (22, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5, 10, 24,7,4,3]),
-                        #   (23, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,12,7,4,3]),
-                        #   (24, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,6,7,4,3]),
-                        #   (25, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,10,6,3,4,3]),
-                        #   (26, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,5,6,3,4,3]),
-                        #   (27, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [10,5,24,7,4,3]),
-                        #   (28, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,24,7,4,3]),
-                        #   (29, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,24,3,4,3]),
-                        #   (30, 'Data/train.xlsx', 32394, 50794, 0.01, 25, state_set3, [5,5,12,3,4,3]),
+                          # Agents with no reward shaping
+                          # Agent without season
+                        #   (1, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,24,7]),
+                        #   (2, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,7]),
+                        #   (3, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7]),
+                        #   (4, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,7]),
+                        #   (5, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,3]),
+                        #   (6, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,5,6,3]),
+                        #   (7, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7]),
+                        #   (8, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,3]),
+                        #   # Agent with season
+                        #   (9, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,24,7,4]),
+                        #   (10, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10, 10, 6,7,4]),
+                        #   (11, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,10,6,7,4]),
+                        #   (12, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,5,6,7,4]),
+                        #   (13, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,7,4]),
+                        #   (14, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4]),
+                        #   (15, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,6,3,4]),
+                        #   (16, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4]),
+                          # Agents with reward shaping
+                          # Agent without season
+                          # Shape small
+                          (17, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [10,10,24,7]),
+                          (18, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [5,5,6,7]),
+                          (19, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [10,10,24,7]),
+                          (20, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [5,5,6,7]),
+                          # Shape large
+                          (21, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [10,10,24,7]),
+                          (22, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [5,5,6,7]),
+                          (23, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [10,10,24,7]),
+                          (24, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [5,5,6,7]),
+                          # Agent with season
+                          # Shape small
+                          (25, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [10,10,24,7,4]),
+                          (26, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [5,5,6,7,4]),
+                          (27, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [10,10,24,7,4]),
+                          (28, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [5,5,6,7,4]),
+                          # Shape large
+                          (29, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [10,10,24,7,4]),
+                          (30, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [5,5,6,7,4]),
+                          (31, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set2, [10,10,24,7,4]),
+                          (32, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set2, [5,5,6,7,4]),
                 ]
 
     # Use multiprocessing to run experiments
-    with multiprocessing.Pool(processes=10) as pool:
+    with multiprocessing.Pool(processes=4) as pool:
         pool.map(run_experiment, hyperparameter_sets)
