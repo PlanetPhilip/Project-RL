@@ -96,10 +96,7 @@ class QAgent:
             "storage_level": 1,
             "price": 1,
             "hour": 1,
-            "day": 1,
             "Season": 1,
-            "Avg_Price": 1,
-            "Rolling_Avg_Price": 1,
             "Day_of_Week": 1
         }
 
@@ -111,7 +108,7 @@ class QAgent:
             'storage_level': {'low': 0, 'high': 290, 'bin_size': custom_bin_size['storage_level']},
             'price': {'low': np.min(env.price_values), 'high': np.max(env.price_values), 'bin_size': custom_bin_size['price']},
             'hour': {'low': 1, 'high': 25, 'bin_size': custom_bin_size['hour']},
-            'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': custom_bin_size['day']},
+            # 'day': {'low': env.day, 'high': len(env.price_values), 'bin_size': custom_bin_size['day']},
             'Season': {'low': 0, 'high': 3, 'bin_size': custom_bin_size['Season']},
             'Day_of_Week': {'low': 0, 'high': 6, 'bin_size': custom_bin_size['Day_of_Week']}
         }
@@ -272,11 +269,11 @@ class QAgent:
         # Initialize Epsilon
         epsilon = 1
 
-        # # Decay rate version 1
-        # decay_rate = (0.05 / 1) ** (1 / (self.n_simulations - 1))
+        # Decay rate version 1
+        decay_rate = (0.05 / 1) ** (1 / (self.n_simulations - 1))
 
-        # Decay rate version 2
-        decay_rate = ((0.05 / 1) ** (1 / (self.n_simulations - 1))) / 2
+        # # Decay rate version 2
+        # decay_rate = ((0.05 / 1) ** (1 / (self.n_simulations - 1))) / 2
 
         # If QTable exists, delete it and then make a new one, because QAgents need a completely new QTable for each training
         if self.q_table_path in os.listdir('QTables'):
@@ -382,6 +379,7 @@ class QAgent:
         print(f"\nTotal evaluation time: {evaluation_time:.2f} seconds")
         self.timing_stats.print_stats()
 
+        return aggregate_reward
 
 class Heuristic(QAgent):
     def __init__(self, *args):
@@ -402,18 +400,18 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    agent_nr = str(4)
-    # subprocess.run(['python', 'main.py', 
-    #                 '--mode', 'train', 
-    #                 '--agent', 'QAgent', 
-    #                 '--agent_nr', agent_nr,
-    #                 '--small_reward', '10000', 
-    #                 '--large_reward', '30000', 
-    #                 '--learning_rate', '0.01', 
-    #                 '--n_simulations', '3', 
-    #                 '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week", "Season"]),
-    #                 '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
-    #                 ])
+    agent_nr = str(100)
+    subprocess.run(['python', 'main.py', 
+                    '--mode', 'train', 
+                    '--agent', 'QAgent', 
+                    '--agent_nr', agent_nr,
+                    '--small_reward', '0', 
+                    '--large_reward', '30000', 
+                    '--learning_rate', '0.01', 
+                    '--n_simulations', '3', 
+                    '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week", "Season"]),
+                    '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
+                    ])
     
     subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', agent_nr])
 

@@ -32,6 +32,7 @@ def validate(agent, agent_nr, path):
             agent_nr=agent_nr
         )
         agent.evaluate()
+        
     except Exception as e:
         print(f"\nError during validation for Agent {agent_nr}:")
         print(f"Error type: {type(e).__name__}")

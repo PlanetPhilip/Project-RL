@@ -19,5 +19,5 @@ imageio[ffmpeg]
 imageio[pyav]
 openpyxl
 scikit-learn
-
+scikit-optimize
 numpy~=1.24.4
