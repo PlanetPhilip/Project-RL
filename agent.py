@@ -64,8 +64,8 @@ class QAgent:
                  large_reward=100000, 
                  learning_rate=0.05, 
                  n_simulations=10,
-                 state_choice=["storage_level", "price", "hour", "Day_of_Week", "Season"],
-                 state_bin_size=[10,5,6,7,4]
+                 state_choice=["storage_level", "price", "hour", "Day_of_Week"],
+                 state_bin_size=[5,5,6,7]
                  ):
         
         self.name = "QAgent"
@@ -79,10 +79,6 @@ class QAgent:
         self.n_simulations = n_simulations
         self.state_choice = state_choice
         self.state_bin_size = state_bin_size
-
-        # If QTable exists, delete it and then make a new one, because QAgents need a completely new QTable for each training
-        # if self.q_table_path in os.listdir('QTables'):
-        #     os.remove(self.q_table_path)
 
         # Load transformed dataset
         self.transformed_data = pd.read_excel('transformed_dataset.xlsx')
@@ -282,6 +278,10 @@ class QAgent:
         # Decay rate version 2
         decay_rate = ((0.05 / 1) ** (1 / (self.n_simulations - 1))) / 2
 
+        # If QTable exists, delete it and then make a new one, because QAgents need a completely new QTable for each training
+        if self.q_table_path in os.listdir('QTables'):
+            os.remove(self.q_table_path)
+
         for i in range(self.n_simulations):
             print(f"Simulation: {i + 1}/{self.n_simulations}")
 
@@ -402,7 +402,7 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    agent_nr = str(12)
+    agent_nr = str(4)
     # subprocess.run(['python', 'main.py', 
     #                 '--mode', 'train', 
     #                 '--agent', 'QAgent', 
@@ -416,3 +416,6 @@ if __name__ == '__main__':
     #                 ])
     
     subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', agent_nr])
+
+    # agent1 = QAgent(1, 'Data/validate.xlsx', 0.95, 10000, 30000, 0.01, 10, ["storage_level", "price", "hour", "Day_of_Week"], [10, 10, 24, 7])
+    # agent1.evaluate()
