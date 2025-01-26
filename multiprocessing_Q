@@ -125,21 +125,21 @@ if __name__ == '__main__':
                           # Agents with reward shaping
                           # Agent without season
                           # Shape small
-                          (17, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [10,10,24,7]),
-                          (18, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [5,5,6,7]),
-                          (19, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [10,10,24,7]),
-                          (20, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [5,5,6,7]),
-                          # Shape large
-                          (21, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [10,10,24,7]),
-                          (22, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [5,5,6,7]),
-                          (23, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [10,10,24,7]),
-                          (24, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [5,5,6,7]),
+                        #   (17, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [10,10,24,7]),
+                        #   (18, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [5,5,6,7]),
+                        #   (19, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [10,10,24,7]),
+                        #   (20, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [5,5,6,7]),
+                        #   # Shape large
+                        #   (21, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [10,10,24,7]),
+                        #   (22, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [5,5,6,7]),
+                        #   (23, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [10,10,24,7]),
+                        #   (24, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [5,5,6,7]),
                           # Agent with season
                           # Shape small
-                          (25, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [10,10,24,7,4]),
-                          (26, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [5,5,6,7,4]),
-                          (27, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [10,10,24,7,4]),
-                          (28, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [5,5,6,7,4]),
+                        #   (25, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [10,10,24,7,4]),
+                        #   (26, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [5,5,6,7,4]),
+                        #   (27, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [10,10,24,7,4]),
+                        #   (28, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [5,5,6,7,4]),
                           # Shape large
                           (29, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [10,10,24,7,4]),
                           (30, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [5,5,6,7,4]),
