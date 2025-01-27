@@ -23,7 +23,7 @@ fixed_params = {
     "agent_nr": 33,
     "n_simulations": 50, # Number of simulations a QAgent will perform during training
     "optimization_mode": True, # Whether the QAgent is in optimization mode. ALWAYS set to True.
-    "n_calls": 12 # Number of iterations of the Bayesian optimizer
+    "n_calls": 15 # Number of iterations of the Bayesian optimizer
 }
 
 # Define the search space (optimizable parameters) including bin sizes

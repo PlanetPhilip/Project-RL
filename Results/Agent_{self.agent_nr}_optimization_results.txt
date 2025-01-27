@@ -1,3 +1,6 @@
 Final results:
 Best parameters found: [0.05641157902710027, 721.9987722668249, 18771.054180315008, 0.00023362975230429856, 1, np.int64(7), np.int64(7), np.int64(6), np.int64(3), np.int64(3)]
 Best objective function value: 7034678.499999991
+Final results:
+Best parameters found: [0.47840631705807085, 1000.0, 0.0, 0.2885592913828779, np.int64(1), np.int64(10), np.int64(3), np.int64(24), np.int64(3), np.int64(4)]
+Best objective function value: 6270010.899999984
