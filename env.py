@@ -44,9 +44,11 @@ class DataCenterEnv(gym.Env):
 
         # Convert action to [-1,1]
         action = float(np.clip(action, -1, 1))
+        # force = False
 
         # (A) If shortfall > max_possible_buy => forcibly buy extra NOW
         if shortfall > max_possible_buy:
+            # force = True
             needed_now = shortfall - max_possible_buy
             forced_fraction = min(1.0, needed_now / self.max_power_rate)
             # If user action is smaller, override:
@@ -55,6 +57,7 @@ class DataCenterEnv(gym.Env):
 
         # (B) Disallow selling if it would make shortfall unfixable
         if action < 0:
+            # force = True
             # Proposed sell MWh
             sell_mwh = -action * self.max_power_rate
             # Potential new storage if we allow this sell
@@ -73,6 +76,7 @@ class DataCenterEnv(gym.Env):
 
         # Final action in [-1,1]
         action = float(np.clip(action, -1, 1))
+        # print(action)
 
         energy_transacted = action * self.max_power_rate
 
@@ -80,12 +84,23 @@ class DataCenterEnv(gym.Env):
         price = self.price_values[self.day - 1][self.hour - 1]
 
         if energy_transacted > 0:
+            # if not force:
+            #     print("Buying")
+            # else:
+            #     print("Force Buying")
             # Buying
             buy_amount = energy_transacted # min(energy_transacted, self.max_storage_capacity - self.storage_level)
             cost = buy_amount * price
             self.storage_level += buy_amount
             reward = -cost
         else:
+            # if energy_transacted < 0:
+            #     if not force:
+            #         print("Selling")
+            #     else:
+            #         print("Force Nothing")
+            # else:
+            #     print("Nothing")
             # Selling
             sell_amount = min(-energy_transacted, self.storage_level)
             revenue = sell_amount * price * 0.8
