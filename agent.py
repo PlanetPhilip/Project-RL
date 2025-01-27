@@ -3,57 +3,11 @@ import numpy as np
 import subprocess
 import os
 import pandas as pd
-import time
 import functools
 from collections import defaultdict
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 
-class TimingStats:
-    def __init__(self):
-        self.function_times = defaultdict(list)
-        self.agent_nr = None  # Will be set when instantiated by an agent
-        
-    def add_timing(self, func_name, execution_time):
-        self.function_times[func_name].append(execution_time)
-        
-    def get_stats(self):
-        stats = {}
-        for func_name, times in self.function_times.items():
-            stats[func_name] = {
-                'total_calls': len(times),
-                'total_time': sum(times),
-                'average_time': sum(times) / len(times),
-                'min_time': min(times),
-                'max_time': max(times)
-            }
-        return stats
-    
-    def print_stats(self):
-        stats = self.get_stats()
-        agent_str = f" for Agent {self.agent_nr}" if self.agent_nr is not None else ""
-        print(f"\nFunction Timing Statistics{agent_str}:")
-        print("-" * 80)
-        print(f"{'Function Name':<30} {'Calls':<10} {'Total(s)':<12} {'Avg(ms)':<12} {'Min(ms)':<12} {'Max(ms)':<12}")
-        print("-" * 80)
-        for func_name, data in stats.items():
-            print(f"{func_name:<30} {data['total_calls']:<10} {data['total_time']:<12.3f} "
-                  f"{data['average_time']*1000:<12.3f} {data['min_time']*1000:<12.3f} "
-                  f"{data['max_time']*1000:<12.3f}")
-
-def timing_decorator(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        
-        # Get the instance (self) from args and update its timing stats
-        if args and hasattr(args[0], 'timing_stats'):
-            args[0].timing_stats.add_timing(func.__name__, end_time - start_time)
-        
-        return result
-    return wrapper
 
 class QAgent:
 
@@ -87,10 +41,6 @@ class QAgent:
 
         # Load transformed dataset
         self.transformed_data = pd.read_excel('Data/train-cleaned-features.xlsx')
-
-        # Add timing stats instance
-        self.timing_stats = TimingStats()
-        self.timing_stats.agent_nr = agent_nr  # Set the agent number
 
         # Discretize Action Space
         self.action_space = gym.spaces.Discrete(3)
@@ -137,7 +87,6 @@ class QAgent:
         state_space_size = tuple(f['bin_size'] for f in state_space.values())
         self.Qtable = np.zeros(state_space_size + action_space_size)
 
-    @timing_decorator
     def discretize_state(self, state):
         # # Debugging: Print the state before discretization
         # print(f"State before discretization: {state}")
@@ -160,7 +109,6 @@ class QAgent:
 
         return discretized_state
 
-    @timing_decorator
     def feature_engineering(self, state):
         """
         Engineer additional features from the raw state.
@@ -177,7 +125,6 @@ class QAgent:
         state = np.append(state[:-1], [day_of_Week, season])
         return state
 
-    @timing_decorator
     def act(self, state, epsilon=0):
         # Picks Action based on Epsilon Greedy
         if np.random.uniform(0, 1) < epsilon:
@@ -188,7 +135,6 @@ class QAgent:
         # print(action - 1)
         return action - 1
 
-    @timing_decorator
     def potential_function(self, state, action):
         """
         Potential function for shaping the reward function.
@@ -236,7 +182,6 @@ class QAgent:
 
             return additional_reward
 
-    @timing_decorator
     def update_qtable(self, state, action, next_state, reward):
         # # Debugging: Print the next state before accessing
         # print(f"Next State in update_qtable: {next_state}")
@@ -257,9 +202,8 @@ class QAgent:
         delta = self.learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
         self.Qtable[tuple(state) + (action,)] = self.Qtable[tuple(state) + (action,)] + delta
 
-    @timing_decorator
     def train(self):
-        start_time = time.time()
+
         # Initialize Epsilon
         epsilon = 1
 
@@ -304,12 +248,6 @@ class QAgent:
         np.save(self.q_table_path, self.Qtable)
         print(f'\nQtable saved to {self.q_table_path}')
 
-        # Print timing statistics at the end of training
-        training_time = time.time() - start_time
-        print(f"\nTotal training time: {training_time:.2f} seconds")
-        self.timing_stats.print_stats()
-
-    @timing_decorator
     def evaluate(self, 
                 print_transitions=False,
                 show_plot=False, 
@@ -317,8 +255,7 @@ class QAgent:
                 xlim=(0,1000), 
                 ylim=(-1000,1000), 
                 ):
-        
-        start_time = time.time()
+
         print(self.name)
         print("Start evaluating:")
         print(f"Q-table shape: {self.Qtable.shape}")
@@ -380,10 +317,6 @@ class QAgent:
 
         print(f'Total reward: {round(aggregate_reward)}\n')
 
-        # Print timing statistics at the end of evaluation
-        evaluation_time = time.time() - start_time
-        print(f"\nTotal evaluation time: {evaluation_time:.2f} seconds")
-        self.timing_stats.print_stats()
 
         # If agent is in optimization mode, record the hyperparameters and the total reward during each optimization run
 
