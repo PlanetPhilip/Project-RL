@@ -24,6 +24,7 @@ fixed_params = {
     "n_simulations": 50, # Number of simulations a QAgent will perform during training
     "optimization_mode": True, # Whether the QAgent is in optimization mode. ALWAYS set to True.
     "n_calls": 15, # Number of iterations of the Bayesian optimizer
+    "use_rewardshaping": True, # Whether the QAgent uses reward shaping.
 
     # Define if we want to show and save the plots
     "show_plot": False,
@@ -79,7 +80,8 @@ def objective_function(params):
         n_simulations=fixed_params["n_simulations"], 
         state_choice=selected_states,
         state_bin_size=selected_bins,
-        optimization_mode=fixed_params["optimization_mode"]
+        optimization_mode=fixed_params["optimization_mode"],
+        use_rewardshaping=fixed_params["use_rewardshaping"]
     )
     
     # Train and evaluate
