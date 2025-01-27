@@ -79,7 +79,6 @@ def objective_function(params):
         large_reward=large_reward, 
         learning_rate=learning_rate, 
         n_episodes=fixed_params["n_episodes"],
-        state_choice=selected_states,
         state_bin_size=selected_bins,
         optimization_mode=fixed_params["optimization_mode"],
         use_rewardshaping=fixed_params["use_rewardshaping"]

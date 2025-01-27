@@ -23,7 +23,7 @@ def extract_total_reward(output):
     return explored, total_reward
 
 def run_experiment(params):
-    agent_nr, env_path, small_reward, large_reward, learning_rate, n_episodes, state_choice, state_bin_size, use_rewardshaping = params
+    agent_nr, env_path, small_reward, large_reward, learning_rate, n_episodes, state_bin_size, use_rewardshaping = params
     
     # Run training
     training_result = subprocess.run([
@@ -36,7 +36,6 @@ def run_experiment(params):
         '--large_reward', str(large_reward),
         '--learning_rate', str(learning_rate),
         '--n_episodes', str(n_episodes),
-        '--state_choice', ",".join(state_choice),
         '--state_bin_size', ",".join(map(str, state_bin_size)),
         '--use_rewardshaping', str(use_rewardshaping)
         ])
@@ -104,7 +103,6 @@ if __name__ == '__main__':
     # Make sure that 'Day_of_Week' is the 4th element in the state name set, otherwise the reward shaping function 
     # Later will not work
 
-    state_set1 = ["storage_level", "price", "hour",  'Day_of_Week']
     state_set2 = ["storage_level", "price", "hour", 'Day_of_Week', 'Season']
 
     # Select which data to use
@@ -112,44 +110,7 @@ if __name__ == '__main__':
     env_path = 'Data/train_cleaned_features.xlsx' # Cleaned training data
 
     hyperparameter_sets = [
-                          # Agents with no reward shaping
-                          # Agent without season
-                        #  (1, env_path, 32394, 50794, 0.01, 1000, state_set1, [10,10,24,7], False),
-                        #   (2, env_path, 32394, 50794, 0.01, 1000, state_set1, [10,10,6,7], False),
-                        #   (3, env_path, 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7], False),
-                        #   (4, env_path, 32394, 50794, 0.01, 1000, state_set1, [5,5,6,7], False),
-                        #   (5, env_path, 32394, 50794, 0.01, 1000, state_set1, [10,10,6,3], False),
-                        #   (6, env_path, 32394, 50794, 0.01, 1000, state_set1, [10,5,6,3], False),
-                        #   (7, env_path, 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7], False),
-                        #   (8, env_path, 32394, 50794, 0.01, 1000, state_set1, [5,5,6,3], False),
-                        #   # Agent with season
-                        #   (9, env_path, 32394, 50794, 0.01, 1000, state_set2, [10,10,24,7,4], False),
-                        #   (10, env_path, 32394, 50794, 0.01, 1000, state_set2, [10, 10, 6,7,4], False),
-                        #   (11, env_path, 32394, 50794, 0.01, 1000, state_set2, [5,10,6,7,4], False),
-                        #   (12, env_path, 32394, 50794, 0.01, 1000, state_set2, [10,5,6,7,4], False),
-                        #   (13, env_path, 32394, 50794, 0.01, 1000, state_set2, [5,5,6,7,4], False),
-                        #   (14, env_path, 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4], False),
-                        #   (15, env_path, 32394, 50794, 0.01, 1000, state_set2, [10,10,6,3,4], False),
-                        #   (16, env_path, 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4], False),
-                          # Agents with reward shaping
-                          # Agent without season
-                          # Shape small
-                        #   (17, env_path, 0, 100, 0.01, 1500, state_set1, [10,10,24,7], True),
-                        #   (18, env_path, 0, 100, 0.01, 1500, state_set1, [5,5,6,7], True),
-                        #   (19, env_path, 100, 300, 0.01, 1500, state_set1, [10,10,24,7], True),
-                        #   (20, env_path, 100, 300, 0.01, 1500, state_set1, [5,5,6,7], True),
-                        #   # Shape large
-                        #   (21, env_path, 0, 500, 0.01, 1500, state_set1, [10,10,24,7], True),
-                        #   (22, env_path, 0, 500, 0.01, 1500, state_set1, [5,5,6,7], True),
-                        #   (23, env_path, 300, 1000, 0.01, 1500, state_set1, [10,10,24,7], True),
-                        #   (24, env_path, 300, 1000, 0.01, 1500, state_set1, [5,5,6,7], True),
-                          # Agent with season
-                          # Shape small
-                        #   (25, env_path, 0, 100, 0.01, 1500, state_set2, [10,10,24,7,4], True),
-                        #   (26, env_path, 0, 100, 0.01, 1500, state_set2, [5,5,6,7,4], True),
-                        #   (27, env_path, 100, 300, 0.01, 1500, state_set2, [10,10,24,7,4], True),
-                        #   (28, env_path, 100, 300, 0.01, 1500, state_set2, [5,5,6,7,4], True),
-                          # Shape large
+
                           (29, env_path, 0, 500, 0.01, 1500, state_set2, [10,10,24,7,4], True),
                           (30, env_path, 0, 500, 0.01, 1500, state_set2, [5,5,6,7,4], True),
                           (31, env_path, 300, 1000, 0.01, 1500, state_set2, [10,10,24,7,4], True),
