@@ -13,3 +13,46 @@ N simulations: 50
 Total reward: -7544268.399999996
 
 
+Optimization Results by Iteration:
+
+Iteration 6:
+Explored: 9.04%
+Total reward: -7528272
+
+Iteration 7:
+Explored: 14.02%
+Total reward: -7550268
+
+Iteration 8:
+Explored: 7.79%
+Total reward: -7481895
+
+Iteration 9:
+[Data not visible in output]
+
+Iteration 10:
+Explored: 13.68%
+Total reward: -7547468
+
+Iteration 11:
+Explored: 8.05%
+Total reward: -6760155
+
+Iteration 12:
+[Data not visible in output]
+
+Iteration 13:
+Explored: 17.29%
+Total reward: -6270011
+
+Iteration 14:
+Explored: 32.30%
+Total reward: -7741158
+
+Iteration 15:
+Explored: [Not visible in output]
+Total reward: -7544268
+
+Final results:
+Best parameters found: [0.4784063, 1000.0, 0.0, 0.2885593, 1, 10, 3, 24, 3, 4]
+Best objective function value: -6270010.9

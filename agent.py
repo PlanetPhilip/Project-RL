@@ -427,18 +427,19 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    agent_nr = str(100)
-    subprocess.run(['python', 'main.py', 
-                    '--mode', 'train', 
-                    '--agent', 'QAgent', 
-                    '--agent_nr', agent_nr,
-                    '--small_reward', '0', 
-                    '--large_reward', '30000', 
-                    '--learning_rate', '0.01', 
-                    '--n_simulations', '3', 
-                    '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week", "Season"]),
-                    '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
-                    ])
+    agent_nr = str(20)
+
+    # subprocess.run(['python', 'main.py', 
+    #                 '--mode', 'train', 
+    #                 '--agent', 'QAgent', 
+    #                 '--agent_nr', agent_nr,
+    #                 '--small_reward', '0', 
+    #                 '--large_reward', '30000', 
+    #                 '--learning_rate', '0.01', 
+    #                 '--n_simulations', '3', 
+    #                 '--state_choice', ",".join(["storage_level", "price", "hour", "Day_of_Week", "Season"]),
+    #                 '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
+    #                 ])
     
     subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', agent_nr])
 
