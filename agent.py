@@ -185,7 +185,7 @@ class QAgent:
         else:
             action = np.argmax(self.Qtable[tuple(state)])
 
-        print(action - 1)
+        # print(action - 1)
         return action - 1
 
     @timing_decorator
