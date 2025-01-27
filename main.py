@@ -4,7 +4,7 @@ from Utils.args import parse_train_arguments, parse_evaluate_arguments
 import sys
 import os 
 
-TRAIN = 'Data/train.xlsx'
+TRAIN = 'Data/train_cleaned_features.xlsx'
 VALIDATE = 'Data/validate.xlsx'
 
 def train(agent, agent_nr, path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size, use_rewardshaping):
