@@ -7,8 +7,8 @@ import csv
 
 
 def run_experiment(params):
-    param_set_nr, env_path, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size, n_simulations, activation_functions = params
-    return train_dqn(param_set_nr, env_path, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size, n_simulations, activation_functions)
+    param_set_nr, env_path, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size, n_episodes, activation_functions = params
+    return train_dqn(param_set_nr, env_path, learning_rate, hidden_layers, buffer_size, batch_size, min_replay_size, n_episodes, activation_functions)
 
 if __name__ == '__main__':
 
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     if not file_exists:
         with open(result_csv, mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['Param Set', 'Small Reward', 'Large Reward', 'Learning Rate', 'Simulations', 'Explored', 'Total Reward'])
+            writer.writerow(['Param Set', 'Small Reward', 'Large Reward', 'Learning Rate', 'Episodes', 'Explored', 'Total Reward'])
 
     # Define different sets of hyperparameters
     hyperparameter_sets = [

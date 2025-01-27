@@ -21,14 +21,14 @@ state_set2 = ["storage_level", "price", "hour", "Day_of_Week", "Season"]
 # Define the fixed parameters that we do not need to optimize, but are needed for the QAgent
 fixed_params = {
     "agent_nr": 33,
-    "n_simulations": 50, # Number of simulations a QAgent will perform during training
+    "n_episodes": 10, # Number of episodes a QAgent will perform during training
     "optimization_mode": True, # Whether the QAgent is in optimization mode. ALWAYS set to True.
     "n_calls": 15, # Number of iterations of the Bayesian optimizer
     "use_rewardshaping": True, # Whether the QAgent uses reward shaping.
 
     # Define if we want to show and save the plots
-    "show_plot": False,
-    "save_plot": False
+    "show_plot": True,
+    "save_plot": True
 }
 
 # Define the search space (optimizable parameters) including bin sizes
@@ -37,7 +37,8 @@ search_space = [
     Real(0, 1000, name='small_reward'),
     Real(0, 20000, name='large_reward'),
     Real(0, 0.3, name='learning_rate'),
-    Categorical([0, 1], name='state_set_choice'),  # 0 for state_set1, 1 for state_set2
+    Categorical([1], name='state_set_choice'),
+    # Categorical([0, 1], name='state_set_choice'),  # 0 for state_set1, 1 for state_set2
     # Bin sizes for state_set1
     Integer(3, 10, name='storage_level_bins'),
     Integer(3, 10, name='price_bins'),
@@ -67,7 +68,7 @@ def objective_function(params):
         selected_bins = [storage_bins, price_bins, hour_bins, dow_bins, season_bins]
     
     # Initialize the environment
-    environment = DataCenterEnv("Data/train.xlsx")
+    environment = DataCenterEnv("Data/train-cleaned-features.xlsx")
     
     # Create the QAgent with the selected parameters
     agent = QAgent(
@@ -77,7 +78,7 @@ def objective_function(params):
         small_reward=small_reward, 
         large_reward=large_reward, 
         learning_rate=learning_rate, 
-        n_simulations=fixed_params["n_simulations"], 
+        n_episodes=fixed_params["n_episodes"],
         state_choice=selected_states,
         state_bin_size=selected_bins,
         optimization_mode=fixed_params["optimization_mode"],
@@ -89,6 +90,7 @@ def objective_function(params):
     total_reward = agent.evaluate(show_plot=fixed_params["show_plot"], save_plot=fixed_params["save_plot"])  # Added plot parameters
     
     return -total_reward
+
 
 # Perform Bayesian optimization
 if __name__ == "__main__":
@@ -116,5 +118,3 @@ if __name__ == "__main__":
         f.write("Final results:\n")
         f.write(f"Best parameters found: {result.x}\n")
         f.write(f"Best objective function value: {result.fun}\n")
-
-    

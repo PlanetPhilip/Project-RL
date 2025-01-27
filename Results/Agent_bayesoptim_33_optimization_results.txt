@@ -1,58 +1,17 @@
 Agent info during optimization:
-Q-table shape: (10, 3, 24, 3, 2, 3)
+Q-table shape: (7, 6, 24, 5, 4, 3)
 State choice: ['storage_level', 'price', 'hour', 'Day_of_Week', 'Season']
-State bin size: [np.int64(10), np.int64(3), np.int64(24), np.int64(3), np.int64(2)]
+State bin size: [7, 6, 24, 5, 4]
 Bins length: 5
-Bins: [array([  0.,  29.,  58.,  87., 116., 145., 174., 203., 232., 261., 290.]), array([1.00000e-02, 8.33340e+02, 1.66667e+03, 2.50000e+03]), array([ 1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10., 11., 12., 13.,
-       14., 15., 16., 17., 18., 19., 20., 21., 22., 23., 24., 25.]), array([0., 2., 4., 6.]), array([0. , 1.5, 3. ])]
-Discount rate: 0.4986642456079417
-Small reward: 1000.0
-Large reward: 0.0
-Learning rate: 0.0
-N simulations: 50
-Total reward: -7544268.399999996
+Bins: [array([  0.        ,  41.42857143,  82.85714286, 124.28571429,
+       165.71428571, 207.14285714, 248.57142857, 290.        ]), array([1.00000000e-02, 2.60683333e+01, 5.21266667e+01, 7.81850000e+01,
+       1.04243333e+02, 1.30301667e+02, 1.56360000e+02]), array([ 1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10., 11., 12., 13.,
+       14., 15., 16., 17., 18., 19., 20., 21., 22., 23., 24., 25.]), array([0. , 1.2, 2.4, 3.6, 4.8, 6. ]), array([0.  , 0.75, 1.5 , 2.25, 3.  ])]
+Discount rate: 0.3998609717152556
+Small reward: 46.66566321361543
+Large reward: 19475.110376829187
+Learning rate: 0.06983140212909128
+N episodes: 10
+Total reward: -4339874.499999981
 
 
-Optimization Results by Iteration:
-
-Iteration 6:
-Explored: 9.04%
-Total reward: -7528272
-
-Iteration 7:
-Explored: 14.02%
-Total reward: -7550268
-
-Iteration 8:
-Explored: 7.79%
-Total reward: -7481895
-
-Iteration 9:
-[Data not visible in output]
-
-Iteration 10:
-Explored: 13.68%
-Total reward: -7547468
-
-Iteration 11:
-Explored: 8.05%
-Total reward: -6760155
-
-Iteration 12:
-[Data not visible in output]
-
-Iteration 13:
-Explored: 17.29%
-Total reward: -6270011
-
-Iteration 14:
-Explored: 32.30%
-Total reward: -7741158
-
-Iteration 15:
-Explored: [Not visible in output]
-Total reward: -7544268
-
-Final results:
-Best parameters found: [0.4784063, 1000.0, 0.0, 0.2885593, 1, 10, 3, 24, 3, 4]
-Best objective function value: -6270010.9
