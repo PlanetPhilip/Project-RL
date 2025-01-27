@@ -7,6 +7,7 @@ import time
 import functools
 from collections import defaultdict
 from sklearn.preprocessing import LabelEncoder
+import matplotlib.pyplot as plt
 
 class TimingStats:
     def __init__(self):
@@ -66,7 +67,8 @@ class QAgent:
                  n_simulations=10,
                  state_choice=["storage_level", "price", "hour", "Day_of_Week"],
                  state_bin_size=[5,5,6,7],
-                 optimization_mode = False
+                 optimization_mode = False,
+                 use_rewardshaping = True
                  ):
         
         self.name = "QAgent"
@@ -81,6 +83,7 @@ class QAgent:
         self.state_choice = state_choice
         self.state_bin_size = state_bin_size
         self.optimization_mode = optimization_mode
+        self.use_rewardshaping = use_rewardshaping
 
         # Load transformed dataset
         self.transformed_data = pd.read_excel('transformed_dataset.xlsx')
@@ -212,37 +215,42 @@ class QAgent:
         # Consider the commented out hours as ideal buying hours later,
         # And shaping the price as well on an average basis.
 
-        ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
-        # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
+        if not self.use_rewardshaping:
+            return 0
 
-        ideal_buying_day = [4,5]
-        ideal_selling_hour = [10,11,12,13,14, 19, 20]
+        else:
 
-        # ideal_selling_hour = [11,12,13]
-        ideal_selling_day = [0,2]
+            ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7]
+            # ideal_buying_hour = [22,23,0,1,2,3,4,5,6,7, 8, 9]
 
-        state_day_of_week = state[3]
-        state_hour = state[2]
+            ideal_buying_day = [4,5]
+            ideal_selling_hour = [10,11,12,13,14, 19, 20]
 
-        additional_reward = 0
+            # ideal_selling_hour = [11,12,13]
+            ideal_selling_day = [0,2]
 
-        # Give large reward if agent buys on ideal buying hours
-        if action == 2 and state_hour in ideal_buying_hour:
-            additional_reward += self.large_reward
+            state_day_of_week = state[3]
+            state_hour = state[2]
 
-        # Give small reward if agent buys on ideal buying days
-        if action == 2 and state_day_of_week in ideal_buying_day:
-            additional_reward += self.small_reward
+            additional_reward = 0
 
-        # Give large reward if agent sells on ideal selling hours
-        if action == 0 and state_hour in ideal_selling_hour:
-            additional_reward += self.large_reward
+            # Give large reward if agent buys on ideal buying hours
+            if action == 2 and state_hour in ideal_buying_hour:
+                additional_reward += self.large_reward
 
-        # Give small reward if agent sells on ideal selling days
-        if action == 0 and state_day_of_week in ideal_selling_day:
-            additional_reward += self.small_reward
+            # Give small reward if agent buys on ideal buying days
+            if action == 2 and state_day_of_week in ideal_buying_day:
+                additional_reward += self.small_reward
 
-        return additional_reward
+            # Give large reward if agent sells on ideal selling hours
+            if action == 0 and state_hour in ideal_selling_hour:
+                additional_reward += self.large_reward
+
+            # Give small reward if agent sells on ideal selling days
+            if action == 0 and state_day_of_week in ideal_selling_day:
+                additional_reward += self.small_reward
+
+            return additional_reward
 
     @timing_decorator
     def update_qtable(self, state, action, next_state, reward):
@@ -318,7 +326,14 @@ class QAgent:
         self.timing_stats.print_stats()
 
     @timing_decorator
-    def evaluate(self, print_transitions=False):
+    def evaluate(self, 
+                print_transitions=False,
+                show_plot=False, 
+                save_plot=False,
+                xlim=(0,1000), 
+                ylim=(-1000,1000), 
+                ):
+        
         start_time = time.time()
         print(self.name)
         print("Start evaluating:")
@@ -342,7 +357,12 @@ class QAgent:
         aggregate_reward = 0
 
         # Create a txt file to store the transition profile
-        with open(f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt', 'w') as f:
+        if self.use_rewardshaping:
+            action_profile_filepath = f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt'
+        else:
+            action_profile_filepath = f'Results/Agent_{self.agent_nr}_without_rewardshaping.txt'
+
+        with open(action_profile_filepath, 'w') as f:
             f.write("Transition Profile during evaluation with reward shaping:\n")
             f.write(f"Q-table shape: {self.Qtable.shape}\n")
             # f.write(f"Q-table: {self.Qtable}\n")
@@ -359,14 +379,14 @@ class QAgent:
         # Rollout
         terminated = False
         while not terminated:
-            with open(f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt', 'a') as f:
+            with open(action_profile_filepath, 'a') as f:
                 f.write(f"State: {state},")
             state = self.discretize_state(state)
             action = self.act(state)
             next_state, reward, terminated = self.env.step(action)
             state = next_state
             aggregate_reward += reward
-            with open(f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt', 'a') as f:
+            with open(action_profile_filepath, 'a') as f:
                 f.write(f" Action: {action}, Reward: {reward}, Next state: {next_state}\n")
 
             if print_transitions:
@@ -406,7 +426,87 @@ class QAgent:
                 f.write(f"Total reward: {aggregate_reward}\n")
                 f.write(f"\n\n")
 
+        # Plot the action profile if show_plot is True
+        if show_plot:
+            print("Plotting action profile...")
+            self.plot_action(action_profile_filepath, save_plot=save_plot, xlim=xlim, ylim=ylim)
+
         return aggregate_reward
+    
+    # Functions used for plotting
+    def plot_action(self, 
+                    action_profile_filepath, 
+                    save_plot=False,
+                    xlim=(0,1000), 
+                    ylim=(-1000,1000)):
+
+        # Preprocess the transition info
+        transition_info = []
+        with open(action_profile_filepath, "r") as infile:
+            for line in infile:
+                if line.startswith("State:"):
+                    transition_info.append(line)
+
+        states = []
+        actions = []
+        rewards = []
+        # next_states = []
+
+        for transition in transition_info:
+            transition = transition.split(",")
+
+            state = transition[0].replace('State: ', "").strip()
+            action = transition[1].replace(" Action: ","").strip()
+            reward = transition[2].replace(" Reward: ","").strip()
+            # next_state = transition[3].replace(" Next state: ","").strip()
+
+            # Convert string representations to lists of numbers
+            state_in_num = [float(x) for x in state.strip('[]').split() if x]
+            # next_state_in_num = [float(x) for x in next_state.strip('[]').split() if x]
+
+            states.append(state_in_num)
+            actions.append(float(action))
+            rewards.append(float(reward))
+            # next_states.append(next_state_in_num)
+
+        # End of preprocess
+
+        # Plot the action profile
+        storage = [state[0] for state in states]
+        price = [state[1] for state in states]
+        hour = [state[2] for state in states]
+        # day_of_week = [state[3] for state in states]
+    
+        if len(states[0]) == 5: # Get the season of each transition if the state set includes season
+            season = [state[4] for state in states]
+        
+        x_axis = range(len(actions))
+        y_axis1 = storage
+        y_axis2 = hour
+        y_axis2 = price
+        y_axis3 = [action * 200 for action in actions] # Amplify the action to make it more visible
+        y_axis4 = rewards
+
+        plt.plot(x_axis, y_axis1, label='Storage', color='blue')
+        plt.plot(x_axis, y_axis2, label='Hour', color='red')
+        plt.plot(x_axis, y_axis3, label='Action', color='green')
+        plt.plot(x_axis, y_axis4, label='Reward', color='purple')
+
+        plt.xlim(xlim)
+        plt.ylim(ylim)
+
+        plt.xlabel('Transition Step')
+        plt.ylabel('State Values')
+        plt.title('Action Profile of Agent ' + self.agent_nr)
+        plt.legend()
+        plt.grid(True)
+
+        if save_plot:
+            plt.savefig(f'Plots/Agent_{self.agent_nr}_action_profile.png')
+
+        plt.show()
+
+
 
 class Heuristic(QAgent):
     def __init__(self, *args):
@@ -427,7 +527,7 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    agent_nr = str(20)
+    agent_nr = str(2)
 
     # subprocess.run(['python', 'main.py', 
     #                 '--mode', 'train', 
@@ -441,7 +541,12 @@ if __name__ == '__main__':
     #                 '--state_bin_size', ",".join(map(str, [10, 10, 24, 7, 4]))
     #                 ])
     
-    subprocess.run(['python', 'main.py', '--mode', 'validate', '--agent', 'QAgent', '--agent_nr', agent_nr])
+    subprocess.run(['python', 'main.py', 
+                    '--mode', 'validate', 
+                    '--agent', 'QAgent', 
+                    '--agent_nr', agent_nr, 
+                    '--show_plot', 'True', 
+                    '--save_plot', 'True',
+                    '--use_rewardshaping', 'True'
+                    ])
 
-    # agent1 = QAgent(1, 'Data/validate.xlsx', 0.95, 10000, 30000, 0.01, 10, ["storage_level", "price", "hour", "Day_of_Week"], [10, 10, 24, 7])
-    # agent1.evaluate()

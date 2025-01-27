@@ -23,7 +23,11 @@ fixed_params = {
     "agent_nr": 33,
     "n_simulations": 50, # Number of simulations a QAgent will perform during training
     "optimization_mode": True, # Whether the QAgent is in optimization mode. ALWAYS set to True.
-    "n_calls": 15 # Number of iterations of the Bayesian optimizer
+    "n_calls": 15, # Number of iterations of the Bayesian optimizer
+
+    # Define if we want to show and save the plots
+    "show_plot": False,
+    "save_plot": False
 }
 
 # Define the search space (optimizable parameters) including bin sizes
@@ -64,25 +68,24 @@ def objective_function(params):
     # Initialize the environment
     environment = DataCenterEnv("Data/train.xlsx")
     
-    # Create the QAgent with the selected states and optimized bin sizes
-    agent = QAgent(f"bayesoptim_{fixed_params['agent_nr']}",
-                   environment, 
-                   discount_rate, 
-                   small_reward, 
-                   large_reward, 
-                   learning_rate, 
-                   fixed_params["n_simulations"], 
-                   selected_states,
-                   selected_bins,
-                   fixed_params["optimization_mode"])
+    # Create the QAgent with the selected parameters
+    agent = QAgent(
+        agent_nr=f"bayesoptim_{fixed_params['agent_nr']}",
+        env=environment, 
+        discount_rate=discount_rate, 
+        small_reward=small_reward, 
+        large_reward=large_reward, 
+        learning_rate=learning_rate, 
+        n_simulations=fixed_params["n_simulations"], 
+        state_choice=selected_states,
+        state_bin_size=selected_bins,
+        optimization_mode=fixed_params["optimization_mode"]
+    )
     
-    # Train the agent
+    # Train and evaluate
     agent.train()
+    total_reward = agent.evaluate(show_plot=fixed_params["show_plot"], save_plot=fixed_params["save_plot"])  # Added plot parameters
     
-    # Evaluate the agent
-    total_reward = agent.evaluate()
-    
-    # Return the negative of the total reward for minimization
     return -total_reward
 
 # Perform Bayesian optimization

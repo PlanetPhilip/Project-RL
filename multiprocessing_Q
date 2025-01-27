@@ -23,7 +23,7 @@ def extract_total_reward(output):
     return explored, total_reward
 
 def run_experiment(params):
-    agent_nr, env_path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size = params
+    agent_nr, env_path, small_reward, large_reward, learning_rate, n_simulations, state_choice, state_bin_size, use_rewardshaping = params
     
     # Run training
     training_result = subprocess.run([
@@ -37,8 +37,9 @@ def run_experiment(params):
         '--learning_rate', str(learning_rate),
         '--n_simulations', str(n_simulations),
         '--state_choice', ",".join(state_choice),
-        '--state_bin_size', ",".join(map(str, state_bin_size))
-    ])
+        '--state_bin_size', ",".join(map(str, state_bin_size)),
+        '--use_rewardshaping', str(use_rewardshaping)
+        ])
     
     if training_result.returncode != 0:
         print(f"Error during training for Agent {agent_nr}")
@@ -50,7 +51,9 @@ def run_experiment(params):
         '--mode', 'validate', 
         '--agent', 'QAgent',
         '--agent_nr', str(agent_nr),
-        '--path', env_path
+        '--path', env_path,
+        '--show_plot', 'True',  # or 'False' as needed
+        '--save_plot', 'True'   # or 'False' as needed
     ], capture_output=True, text=True)
 
     if result.returncode != 0:
@@ -94,6 +97,8 @@ if __name__ == '__main__':
     # 3. Run the code
     # Result will be appended automatically in the csv file: Results/experiment_results_Q.csv
 
+    # 4.If you want to plot the results, set the show_plot and save_plot parameters to True WITHIN the run_experiment function
+
     # Define the state name set and their bin size
     # Make sure the bin size has the same length as the state name set
     # Make sure that 'Day_of_Week' is the 4th element in the state name set, otherwise the reward shaping function 
@@ -105,46 +110,46 @@ if __name__ == '__main__':
     hyperparameter_sets = [
                           # Agents with no reward shaping
                           # Agent without season
-                        #   (1, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,24,7]),
-                        #   (2, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,7]),
-                        #   (3, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7]),
-                        #   (4, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,7]),
-                        #   (5, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,3]),
-                        #   (6, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,5,6,3]),
-                        #   (7, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7]),
-                        #   (8, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,3]),
+                        #  (1, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,24,7], False),
+                        #   (2, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,7], False),
+                        #   (3, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7], False),
+                        #   (4, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,7], False),
+                        #   (5, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,10,6,3], False),
+                        #   (6, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [10,5,6,3], False),
+                        #   (7, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,10,6,7], False),
+                        #   (8, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set1, [5,5,6,3], False),
                         #   # Agent with season
-                        #   (9, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,24,7,4]),
-                        #   (10, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10, 10, 6,7,4]),
-                        #   (11, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,10,6,7,4]),
-                        #   (12, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,5,6,7,4]),
-                        #   (13, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,7,4]),
-                        #   (14, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4]),
-                        #   (15, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,6,3,4]),
-                        #   (16, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4]),
+                        #   (9, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,24,7,4], False),
+                        #   (10, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10, 10, 6,7,4], False),
+                        #   (11, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,10,6,7,4], False),
+                        #   (12, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,5,6,7,4], False),
+                        #   (13, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,7,4], False),
+                        #   (14, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4], False),
+                        #   (15, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [10,10,6,3,4], False),
+                        #   (16, 'Data/train.xlsx', 32394, 50794, 0.01, 1000, state_set2, [5,5,6,3,4], False),
                           # Agents with reward shaping
                           # Agent without season
                           # Shape small
-                        #   (17, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [10,10,24,7]),
-                        #   (18, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [5,5,6,7]),
-                        #   (19, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [10,10,24,7]),
-                        #   (20, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [5,5,6,7]),
+                        #   (17, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [10,10,24,7], True),
+                        #   (18, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set1, [5,5,6,7], True),
+                        #   (19, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [10,10,24,7], True),
+                        #   (20, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set1, [5,5,6,7], True),
                         #   # Shape large
-                        #   (21, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [10,10,24,7]),
-                        #   (22, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [5,5,6,7]),
-                        #   (23, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [10,10,24,7]),
-                        #   (24, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [5,5,6,7]),
+                        #   (21, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [10,10,24,7], True),
+                        #   (22, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set1, [5,5,6,7], True),
+                        #   (23, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [10,10,24,7], True),
+                        #   (24, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set1, [5,5,6,7], True),
                           # Agent with season
                           # Shape small
-                        #   (25, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [10,10,24,7,4]),
-                        #   (26, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [5,5,6,7,4]),
-                        #   (27, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [10,10,24,7,4]),
-                        #   (28, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [5,5,6,7,4]),
+                        #   (25, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [10,10,24,7,4], True),
+                        #   (26, 'Data/train.xlsx', 0, 100, 0.01, 1500, state_set2, [5,5,6,7,4], True),
+                        #   (27, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [10,10,24,7,4], True),
+                        #   (28, 'Data/train.xlsx', 100, 300, 0.01, 1500, state_set2, [5,5,6,7,4], True),
                           # Shape large
-                          (29, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [10,10,24,7,4]),
-                          (30, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [5,5,6,7,4]),
-                          (31, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set2, [10,10,24,7,4]),
-                          (32, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set2, [5,5,6,7,4]),
+                          (29, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [10,10,24,7,4], True),
+                          (30, 'Data/train.xlsx', 0, 500, 0.01, 1500, state_set2, [5,5,6,7,4], True),
+                          (31, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set2, [10,10,24,7,4], True),
+                          (32, 'Data/train.xlsx', 300, 1000, 0.01, 1500, state_set2, [5,5,6,7,4], True),
                 ]
 
     # Use multiprocessing to run experiments
