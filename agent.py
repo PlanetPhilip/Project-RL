@@ -85,7 +85,7 @@ class QAgent:
         #     os.remove(self.q_table_path)
 
         # Load transformed dataset
-        self.transformed_data = pd.read_excel('transformed_dataset.xlsx')
+        self.transformed_data = pd.read_excel('Data/train-cleaned-features.xlsx')
 
 
         # Add timing stats instance
@@ -164,37 +164,17 @@ class QAgent:
         Engineer additional features from the raw state.
         Returns only the features defined in self.state_choice.
         """
-        # Get Season and Day_of_Week from transformed dataset
-        day_index = min(self.env.day, len(self.transformed_data) - 1)
-        # Initialize LabelEncoder
-        label_encoder = LabelEncoder()
-        
-        # Fit the encoder on the unique seasons in the dataset
-        unique_seasons = self.transformed_data['Season'].unique()
-        label_encoder.fit(unique_seasons)
-        
-        # Transform the current season into an integer
-        Season = label_encoder.transform([self.transformed_data['Season'].iloc[day_index]])[0]
 
-        Day_of_Week = self.transformed_data['Day_of_Week'].iloc[day_index]
+        # Get Day_of_Week from transformed dataset
+        day_of_Week = self.transformed_data['Day_of_Week'].iloc[self.env.day - 1]
 
-        # Create a dictionary of all possible features
-        all_features = {
-            'storage_level': state[0],
-            'price': state[1],
-            'hour': state[2],
-            'day': state[3],
-            'Season': Season,
-            'Day_of_Week': Day_of_Week
-        }
+        # Get Season from transformed dataset
+        season =  self.transformed_data['Season'].iloc[self.env.day - 1]
+        print('season', season)
 
-        # Return only the features we choose to let agent use
-        selected_state = [all_features[state_name] for state_name in self.state_choice if state_name in all_features]
-
-        # # Debugging: Print the selected state
-        # print(f"Selected State: {selected_state}")
-
-        return selected_state
+        # Add to state
+        state = state[:-1] + day_of_Week + season
+        return state
 
     @timing_decorator
     def act(self, state, epsilon=0):
@@ -402,7 +382,7 @@ class Heuristic(QAgent):
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    agent_nr = str(12)
+    agent_nr = str(17)
     # subprocess.run(['python', 'main.py', 
     #                 '--mode', 'train', 
     #                 '--agent', 'QAgent', 
