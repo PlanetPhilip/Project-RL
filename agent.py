@@ -466,11 +466,15 @@ class QAgent:
         y_axis2 = price
         y_axis3 = [action * 200 for action in actions] # Amplify the action to make it more visible
         y_axis4 = rewards
+        if len(states[0]) == 5:
+            y_axis5 = season
 
         plt.plot(x_axis, y_axis1, label='Storage', color='blue')
         plt.plot(x_axis, y_axis2, label='Hour', color='red')
         plt.plot(x_axis, y_axis3, label='Action', color='green')
         plt.plot(x_axis, y_axis4, label='Reward', color='purple')
+        if len(states[0]) == 5:
+            plt.plot(x_axis, y_axis5, label='Season', color='orange')
 
         plt.xlim(xlim)
         plt.ylim(ylim)
