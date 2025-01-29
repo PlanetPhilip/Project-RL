@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 class QAgent:
 
     def __init__(self, agent_nr, env, discount_rate=0.95, small_reward=50000, large_reward=100000, learning_rate=0.05,
-                 n_episodes=10, state_bin_size=[5, 5, 6, 7, 4], optimization_mode=False, use_rewardshaping=True):
+                 n_episodes=10, state_bin_size=[7, 5, 6, 3, 4], optimization_mode=False, use_rewardshaping=True):
 
         # Agent Details
         self.name = "QAgent"
@@ -19,7 +19,7 @@ class QAgent:
 
         # Hyperparameters
         self.discount_rate = discount_rate
-        self.q_table_path = f'QTables/q_table_{agent_nr}.npy'
+        self.q_table_path = f'QTables/q_table_bayesoptim_bayesoptim_113.npy'
         self.small_reward = small_reward
         self.large_reward = large_reward
         self.learning_rate = learning_rate
@@ -184,6 +184,8 @@ class QAgent:
                 xlim=(0,1000), 
                 ylim=(-1000,1000), 
                 ):
+
+        self.data = pd.read_excel('Data/transformed_validate.xlsx')
 
         print(self.name)
         print("Start evaluating:")

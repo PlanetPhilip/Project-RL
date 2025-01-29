@@ -56,14 +56,14 @@ if __name__ == '__main__':
     else:
         mode = 'validate'
         params = {
-            'agent': 'Heuristic',
+            'agent': 'QAgent',
             'agent_nr': '1',
-            'path': '',
-            'small_reward': 10000,
-            'large_reward': 30000,
-            'learning_rate': 0.01,
-            'n_episodes': 10,
-            'state_bin_size': [10, 10, 24, 7, 4],
-            'use_rewardshaping': True
+            'path': ''
+            # 'small_reward': 10000,
+            # 'large_reward': 30000,
+            # 'learning_rate': 0.01,
+            # 'n_episodes': 10,
+            # 'state_bin_size': [10, 10, 24, 7, 4],
+            # 'use_rewardshaping': True
         }
         locals()[mode](**params)
