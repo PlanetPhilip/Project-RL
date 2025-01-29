@@ -75,7 +75,7 @@ class QAgent:
         self.agent_nr = agent_nr
         self.env = env
         self.discount_rate = discount_rate
-        self.q_table_path = f'QTables/q_table_{agent_nr}.npy'
+        self.q_table_path = f'QTables/q_table_bayesoptim_{agent_nr}.npy'
         self.small_reward = small_reward
         self.large_reward = large_reward
         self.learning_rate = learning_rate
@@ -86,7 +86,7 @@ class QAgent:
         self.use_rewardshaping = use_rewardshaping
 
         # Load transformed dataset
-        self.transformed_data = pd.read_excel('Data/train-cleaned-features.xlsx')
+        self.data = pd.read_excel('Data/train-cleaned-features.xlsx')
 
         # Add timing stats instance
         self.timing_stats = TimingStats()
@@ -168,10 +168,10 @@ class QAgent:
         """
 
         # Get Day_of_Week from transformed dataset
-        day_of_Week = self.transformed_data['Day_of_Week'].iloc[self.env.day - 1]
+        day_of_Week = self.data['Day_of_Week'].iloc[self.env.day - 1]
 
         # Get Season from transformed dataset
-        season = self.transformed_data['Season'].iloc[self.env.day - 1]
+        season = self.data['Season'].iloc[self.env.day - 1]
 
         # Add to state
         state = np.append(state[:-1], [day_of_Week, season])
@@ -317,7 +317,9 @@ class QAgent:
                 xlim=(0,1000), 
                 ylim=(-1000,1000), 
                 ):
-        
+
+        self.data = pd.read_excel('Data/transformed_validate.xlsx')
+
         start_time = time.time()
         print(self.name)
         print("Start evaluating:")
