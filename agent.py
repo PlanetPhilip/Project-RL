@@ -8,18 +8,18 @@ import matplotlib.pyplot as plt
 
 class QAgent:
 
-    def __init__(self, agent_nr, env, discount_rate=0.95, small_reward=50000, large_reward=100000, learning_rate=0.05,
-                 n_episodes=10, state_bin_size=[7, 5, 6, 3, 4], optimization_mode=False, use_rewardshaping=True):
+    def __init__(self, path, agent_nr, env, discount_rate=0.95, small_reward=50000, large_reward=100000, learning_rate=0.05,
+                 n_episodes=10, state_bin_size=[4, 8, 16, 3, 1], optimization_mode=False, use_rewardshaping=True):
 
         # Agent Details
         self.name = "QAgent"
         self.agent_nr = agent_nr
         self.env = env
-        self.data = pd.read_excel('Data/train-cleaned-features.xlsx')
+        self.data = pd.read_excel(path)
 
         # Hyperparameters
         self.discount_rate = discount_rate
-        self.q_table_path = f'QTables/q_table_bayesoptim_bayesoptim_113.npy'
+        self.q_table_path = f'QTables/q_table_{agent_nr}.npy'
         self.small_reward = small_reward
         self.large_reward = large_reward
         self.learning_rate = learning_rate
@@ -48,7 +48,7 @@ class QAgent:
 
         # Print
         print(f"Features: {list(states.keys())}")
-        print(f"Bin sizes: {state_bin_size}")
+        # print(f"Bin sizes: {state_bin_size}")
         print("")
 
 
@@ -142,18 +142,16 @@ class QAgent:
         delta = self.learning_rate * (Q_target - self.Qtable[tuple(state) + (action,)])
         self.Qtable[tuple(state) + (action,)] = self.Qtable[tuple(state) + (action,)] + delta
 
-    def train(self):
+    def train(self, start_epsilon=1, end_epsilon=0.05):
 
         # Initialize Epsilon
-        epsilon = 1
+        epsilon = start_epsilon
+        decay_rate = (end_epsilon / start_epsilon) ** (1 / (self.n_episodes - 1))
 
-        # Decay rate version 1
-        decay_rate = (0.05 / 1) ** (1 / (self.n_episodes - 1))
+        # Reset QTable
+        if self.q_table_path in os.listdir('QTables'): os.remove(self.q_table_path)
 
-        # If QTable exists, delete it and then make a new one, because QAgents need a completely new QTable for each training
-        if self.q_table_path in os.listdir('QTables'):
-            os.remove(self.q_table_path)
-
+        # Training Loop
         for i in range(self.n_episodes):
             print(f"Episode: {i + 1}/{self.n_episodes}")
 
@@ -182,16 +180,7 @@ class QAgent:
                 show_plot=False, 
                 save_plot=False,
                 xlim=(0,1000), 
-                ylim=(-1000,1000), 
-                ):
-
-        self.data = pd.read_excel('Data/transformed_validate.xlsx')
-
-        print(self.name)
-        print("Start evaluating:")
-        print(f"Q-table shape: {self.Qtable.shape}")
-        # print(f"Q-table: {self.Qtable}")
-        print(f"Bins: {self.bins}")
+                ylim=(-1000,1000)):
 
         # Load Q-table
         if self.name != 'Heuristic':
@@ -202,18 +191,16 @@ class QAgent:
                 print(f"Error loading Q-table: {e}")
                 return
 
+        # Print Exploration Percentage
         print(f"Explored: {100 * (1 - np.count_nonzero(self.Qtable == 0) / self.Qtable.size):.2f}%")
 
         # Initialize
         state = self.env.reset()
         aggregate_reward = 0
 
-        # Create a txt file to store the transition profile
-        if self.use_rewardshaping:
-            action_profile_filepath = f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt'
-        else:
-            action_profile_filepath = f'Results/Agent_{self.agent_nr}_without_rewardshaping.txt'
-
+        # Store Transition Profile in .txt
+        if self.use_rewardshaping: action_profile_filepath = f'Results/Agent_{self.agent_nr}_with_rewardshaping.txt'
+        else: action_profile_filepath = f'Results/Agent_{self.agent_nr}_without_rewardshaping.txt'
         with open(action_profile_filepath, 'w') as f:
             f.write("Transition Profile during evaluation with reward shaping:\n")
             f.write(f"Q-table shape: {self.Qtable.shape}\n")
@@ -247,15 +234,10 @@ class QAgent:
 
         print(f'Total reward: {round(aggregate_reward)}\n')
 
-
-        # If agent is in optimization mode, record the hyperparameters and the total reward during each optimization run
-
+        # Store Results during Optimization
         if self.optimization_mode:
-            
-            if 'Results/Agent_{self.agent_nr}_optimization_results.txt' not in os.listdir('Results'):
-                file_mode = 'w'
-            else:
-                file_mode = 'a' 
+            if 'Results/Agent_{self.agent_nr}_optimization_results.txt' not in os.listdir('Results'): file_mode = 'w'
+            else: file_mode = 'a'
 
             with open(f'Results/Agent_{self.agent_nr}_optimization_results.txt', file_mode) as f:
                 f.write("Agent info during optimization:\n")
@@ -272,7 +254,7 @@ class QAgent:
                 f.write(f"Total reward: {aggregate_reward}\n")
                 f.write(f"\n\n")
 
-        # Plot the action profile if show_plot is True
+        # Plot Action Profile
         if show_plot:
             print("Plotting action profile...")
             self.plot_action(action_profile_filepath, save_plot=save_plot, xlim=xlim, ylim=ylim)
@@ -380,7 +362,7 @@ if __name__ == '__main__':
     agent_nr = str(1)
 
     subprocess.run(['python', 'main.py', 
-                    '--mode', 'train',
+                    '--mode', 'evaluate',
                     '--agent', 'QAgent', 
                     '--agent_nr', agent_nr, 
                     '--show_plot', 'True',

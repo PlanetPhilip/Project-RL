@@ -1,0 +1,15 @@
+Agent info during optimization:
+Q-table shape: (10, 3, 6, 7, 4, 3)
+State choice: ['storage_level', 'price', 'hour', 'Day_of_Week', 'Season']
+State bin size: [10, 3, 6, 7, 4]
+Bins length: 5
+Bins: [array([  0.,  29.,  58.,  87., 116., 145., 174., 203., 232., 261., 290.]), array([1.00000000e-02, 5.21266667e+01, 1.04243333e+02, 1.56360000e+02]), array([ 1.,  5.,  9., 13., 17., 21., 25.]), array([0.        , 0.85714286, 1.71428571, 2.57142857, 3.42857143,
+       4.28571429, 5.14285714, 6.        ]), array([0.  , 0.75, 1.5 , 2.25, 3.  ])]
+Discount rate: 0.9894792949398921
+Small reward: 0
+Large reward: 0
+Learning rate: 0.14320626793723273
+N episodes: 1000
+Total reward: -4564957.14
+
+

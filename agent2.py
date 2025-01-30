@@ -14,14 +14,6 @@ import pandas as pd
 import seaborn as sns
 import os
 
-# Set the seed for reproducibility
-seed = 7
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)
-np.random.seed(seed)
-random.seed(seed)
-
 
 class DQN(nn.Module):
     def __init__(self, env, learning_rate=5e-4, hidden_layers=[128, 64, 32], activation_functions=[nn.Tanh(), nn.Tanh(), nn.Tanh()]):
