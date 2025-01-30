@@ -61,12 +61,12 @@ class QAgent:
                  agent_nr,
                  env, 
                  discount_rate=0.95, 
-                 small_reward=50000, 
-                 large_reward=100000, 
-                 learning_rate=0.05, 
-                 n_episodes=10,
-                 state_choice=["storage_level", "price", "hour", "Day_of_Week"],
-                 state_bin_size=[5,5,6,7],
+                 small_reward=83.31949117361646 , 
+                 large_reward=117.33646535077722, 
+                 learning_rate=0.20161969771088806, 
+                 n_episodes=1200,
+                 state_choice=["storage_level", "price", "hour", "Day_of_Week", "Season"],
+                 state_bin_size=[5,8,14,3,2],
                  optimization_mode = False,
                  use_rewardshaping = True
                  ):
@@ -75,7 +75,8 @@ class QAgent:
         self.agent_nr = agent_nr
         self.env = env
         self.discount_rate = discount_rate
-        self.q_table_path = f'QTables/q_table_bayesoptim_{agent_nr}.npy'
+        self.q_table_path = f"QTables/q_table_bayesoptim_{agent_nr}.npy"
+        # self.q_table_path = f'QTables/q_table_{agent_nr}.npy'
         self.small_reward = small_reward
         self.large_reward = large_reward
         self.learning_rate = learning_rate
@@ -219,20 +220,26 @@ class QAgent:
             additional_reward = 0
 
             # Give large reward if agent buys on ideal buying hours
-            if action == 2 and state_hour in ideal_buying_hour:
+            if action == 1 and state_hour in ideal_buying_hour:
                 additional_reward += self.large_reward
 
             # Give small reward if agent buys on ideal buying days
-            if action == 2 and state_day_of_week in ideal_buying_day:
+            if action == 1 and state_day_of_week in ideal_buying_day:
                 additional_reward += self.small_reward
 
-            # Give large reward if agent sells on ideal selling hours
-            if action == 0 and state_hour in ideal_selling_hour:
-                additional_reward += self.large_reward
+            if state[0] > 120: # If storage level is greater than 120, agent is rewarded for selling
 
-            # Give small reward if agent sells on ideal selling days
-            if action == 0 and state_day_of_week in ideal_selling_day:
-                additional_reward += self.small_reward
+                # Give large reward if agent sells on ideal selling hours
+                if action == -1 and state_hour in ideal_selling_hour:
+                    additional_reward += self.large_reward
+
+                # Give small reward if agent sells on ideal selling days
+                if action == -1 and state_day_of_week in ideal_selling_day:
+                    additional_reward += self.small_reward
+
+            # Penalize the agent if in the end of the day, the agent does not have more than 120 energy in storage
+            if state[0] < 110 and state_hour == 23:
+                additional_reward -= self.small_reward
 
             return additional_reward
 
@@ -512,12 +519,12 @@ class Heuristic(QAgent):
             action = 2
         else:
             action = 1
-        return action
+        return action -1 
 
 
 if __name__ == '__main__':
     # Example of running QAgent with subprocess
-    agent_nr = str(1)
+    agent_nr = str(39)
 
     # subprocess.run(['python', 'main.py', 
     #                 '--mode', 'train', 
@@ -532,11 +539,12 @@ if __name__ == '__main__':
     #                 ])
     
     subprocess.run(['python', 'main.py', 
-                    '--mode', 'train',
+                    '--mode', 'validate',
                     '--agent', 'QAgent', 
                     '--agent_nr', agent_nr, 
                     '--show_plot', 'True',
                     '--save_plot', 'True',
                     '--use_rewardshaping', 'True'
+
                     ])
 
